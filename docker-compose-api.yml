@@ -1,0 +1,19 @@
+version: '3.5'
+services:
+    api:
+        image: ranger.services.subscriptions:dev
+        container_name: subscriptions
+        ports:
+            - '8089:8089'
+        networks:
+            - subscriptions
+            - ranger
+
+networks:
+    ranger:
+        name: ranger-network
+        external: true
+
+    subscriptions:
+        name: subscriptions-network
+        external: true
