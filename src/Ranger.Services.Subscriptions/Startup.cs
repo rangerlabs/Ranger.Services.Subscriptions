@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Autofac;
+using ChargeBee.Api;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -71,15 +72,11 @@ namespace Ranger.Services.Subscriptions
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<SubscriptionsDbContext>();
-            services.AddSingleton<IPusher>(s =>
-                        {
-                            var options = configuration.GetOptions<RangerPusherOptions>("pusher");
-                            return new Pusher(options.AppId, options.Key, options.Secret, new PusherOptions { Cluster = options.Cluster, Encrypted = bool.Parse(options.Encrypted) });
-                        });
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
+            builder.RegisterInstance<ChargeBeeOptions>(configuration.GetOptions<ChargeBeeOptions>("chargeBee"));
             builder.AddRabbitMq();
         }
 
@@ -87,6 +84,7 @@ namespace Ranger.Services.Subscriptions
         {
             this.loggerFactory = loggerFactory;
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
+            ApiConfig.Configure(configuration.GetOptions<ChargeBeeOptions>("chargeBee").Site, configuration.GetOptions<ChargeBeeOptions>("chargeBee").ApiKey);
 
             app.UseRouting();
             app.UseAuthentication();
