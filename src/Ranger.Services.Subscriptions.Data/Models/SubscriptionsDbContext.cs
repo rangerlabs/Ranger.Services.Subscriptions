@@ -17,6 +17,7 @@ namespace Ranger.Services.Subscriptions.Data
         }
 
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<TenantSubscription> TenantSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +59,9 @@ namespace Ranger.Services.Subscriptions.Data
 
                 encryptionHelper?.SetEncrytedPropertyAccessMode(entity);
             }
+
+            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.PgsqlDatabaseUsername).IsUnique();
+            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.SubscriptionId).IsUnique();
         }
     }
 }

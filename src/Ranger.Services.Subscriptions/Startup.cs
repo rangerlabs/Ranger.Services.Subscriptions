@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
-using PusherServer;
 using Ranger.Common;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
@@ -72,6 +71,8 @@ namespace Ranger.Services.Subscriptions
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<SubscriptionsDbContext>();
+
+            services.AddTransient<SubscriptionsRepository>();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -92,7 +93,8 @@ namespace Ranger.Services.Subscriptions
             {
                 endpoints.MapControllers();
             });
-            this.busSubscriber = app.UseRabbitMQ();
+            this.busSubscriber = app.UseRabbitMQ()
+                .SubscribeCommand<CreateNewTenantSubscription>();
         }
 
 

@@ -1,63 +1,148 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using ChargeBee.Api;
-using ChargeBee.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Ranger.Common;
-using Ranger.Services.Subscriptions;
+using Ranger.InternalHttpClient;
+using Ranger.Services.Subscriptions.Data;
 
-[ApiController]
-public class SubscriptionsController : ControllerBase
+namespace Ranger.Services.Subscriptions
 {
-    private readonly ILogger<SubscriptionsController> logger;
-    private readonly ChargeBeeOptions options;
-    public SubscriptionsController(ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
+    [ApiController]
+    public class SubscriptionsController : ControllerBase
     {
-        this.options = options;
-        this.logger = logger;
-    }
+        private readonly ITenantsClient tenantsClient;
+        private readonly SubscriptionsRepository subscriptionsRepo;
+        private readonly ILogger<SubscriptionsController> logger;
+        private readonly ChargeBeeOptions options;
 
-    [HttpGet("{domain}/subscriptions/checkout-existing-hosted-page-url")]
-    public async Task<IActionResult> GetCheckoutExistingHostedPageUrl([FromRoute] string domain)
-    {
-        // if (string.IsNullOrWhiteSpace(email))
-        // {
-        //     var apiErrorContent = new ApiErrorContent();
-        //     apiErrorContent.Errors.Add($"{nameof(email)} was null or whitespace.");
-        //     return BadRequest(apiErrorContent);
-        // }
-
-        //get from the database
-        String subscriptionId = "AzqgwaRudbEVbEZG";
-        RangerChargeBeeHostedPage result = null;
-        try
+        public SubscriptionsController(ITenantsClient tenantsClient, SubscriptionsRepository subscriptionsRepo, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
         {
-            var _ = HostedPage.CheckoutExisting()
-                    .SubscriptionId(subscriptionId)
-                    .SubscriptionPlanId("startup")
-                    .Request()
-                    .HostedPage;
-            result = new RangerChargeBeeHostedPage
+            this.tenantsClient = tenantsClient;
+            this.subscriptionsRepo = subscriptionsRepo;
+            this.options = options;
+            this.logger = logger;
+        }
+
+        [HttpGet("{domain}/subscriptions/checkout-existing-hosted-page-url")]
+        public async Task<IActionResult> GetCheckoutExistingHostedPageUrl([FromRoute] string domain, [FromQuery] string planId)
+        {
+            if (string.IsNullOrWhiteSpace(planId))
             {
-                Id = _.Id,
-                Type = _.HostedPageType,
-                Url = _.Url,
-                State = _.State,
-                Embed = _.Embed,
-                CreatedAt = _.CreatedAt,
-                ExpiresAt = _.ExpiresAt,
-                UpdatedAt = _.UpdatedAt,
-                ResourceVersion = _.ResourceVersion
-            };
+                var apiErrorContent = new ApiErrorContent();
+                apiErrorContent.Errors.Add($"{nameof(planId)} was null or whitespace.");
+                return BadRequest(apiErrorContent);
+            }
 
+            ContextTenant tenant = null;
+            try
+            {
+                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
 
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            RangerChargeBeeHostedPage result = null;
+            try
+            {
+                var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
+                if (hostedPageUrl is null)
+                {
+                    throw new Exception("Hosted Page Url response was null.");
+                }
+                result = new RangerChargeBeeHostedPage
+                {
+                    Url = hostedPageUrl
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to get the hosted page for Subscription Id '{tenantSubscription.SubscriptionId}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(result);
         }
-        catch (Exception ex)
+
+        [HttpGet("{domain}/subscriptions")]
+        public async Task<IActionResult> GetSubscription([FromRoute] string domain)
         {
-            logger.LogError(ex, $"Failed to get the hosted page for Subscription Id '{subscriptionId}'.");
+            ContextTenant tenant = null;
+            try
+            {
+                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(tenantSubscription);
         }
-        return Ok(result);
+
+        [HttpGet("{domain}/subscriptions/limit-details")]
+        public async Task<IActionResult> GetLimitDetails([FromRoute] string domain)
+        {
+            var apiErrorContent = new ApiErrorContent();
+
+            ContextTenant tenant = null;
+            try
+            {
+                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            SubscriptionLimitDetails limitDetails = null;
+            try
+            {
+                limitDetails = await ChargeBeeService.GetSubscriptLimitDetails(tenantSubscription.SubscriptionId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(limitDetails);
+        }
     }
 }
