@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.Common;
+using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 
@@ -48,6 +49,11 @@ namespace Ranger.Services.Subscriptions
                     {
                         policyBuilder.RequireScope("subscriptionApi");
                     });
+            });
+
+            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
+            {
+                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
             });
 
             services.AddEntityFrameworkNpgsql().AddDbContext<SubscriptionsDbContext>(options =>
