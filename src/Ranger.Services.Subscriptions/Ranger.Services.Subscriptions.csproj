@@ -4,6 +4,7 @@
     <AssemblyName>Ranger.Services.Subscriptions</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Ranger.Services.Subscriptions</PackageId>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="./Certs/*.pfx" CopyToOutputDirectory="PreserveNewest" />
@@ -24,7 +25,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.1" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Ranger.InternalHttpClient" Version="3.3.1" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="3.3.2" />
     <PackageReference Include="Ranger.Monitoring" Version="2.1.0" />
     <PackageReference Include="Ranger.RabbitMQ" version="2.2.2" />
     <PackageReference Include="SendGrid" Version="9.12.5" />

@@ -78,7 +78,7 @@ namespace Ranger.Services.Subscriptions
             return Ok(result);
         }
 
-        [HttpGet("{domain}/subscriptions")]
+        [HttpGet("{domain}/subscriptions/plan-id")]
         public async Task<IActionResult> GetSubscription([FromRoute] string domain)
         {
             ContextTenant tenant = null;
@@ -102,7 +102,7 @@ namespace Ranger.Services.Subscriptions
                 logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(tenantSubscription);
+            return Ok(new { PlanId = tenantSubscription.PlanId });
         }
 
         [HttpGet("{domain}/subscriptions/limit-details")]
@@ -132,17 +132,34 @@ namespace Ranger.Services.Subscriptions
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            SubscriptionLimitDetails limitDetails = null;
+            LimitFields limit = null;
+            LimitFields utilized = null;
             try
             {
-                limitDetails = await ChargeBeeService.GetSubscriptLimitDetails(tenantSubscription.SubscriptionId);
+                limit = await ChargeBeeService.GetSubscriptLimitDetails(tenantSubscription.PlanId);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(limitDetails);
+            try
+            {
+                var _ = await subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+                utilized = new LimitFields
+                {
+                    Geofences = _.UtilizationDetails.GeofenceCount,
+                    Integrations = _.UtilizationDetails.IntegrationCount,
+                    Projects = _.UtilizationDetails.ProjectCount,
+                    Accounts = _.UtilizationDetails.AccountCount
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve utilized limit details.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
         }
     }
 }

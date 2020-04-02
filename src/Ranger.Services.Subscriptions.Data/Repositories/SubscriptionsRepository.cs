@@ -24,16 +24,23 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new ArgumentNullException(nameof(subscription));
             }
 
-            try
+            context.TenantSubscriptions.Add(subscription);
+            await context.SaveChangesAsync();
+
+        }
+
+        public async Task UpdateTenantSubscriptionByPgsqlDatabaseUsername(string pgsqlDatabaseUsername, TenantSubscription tenantSubscription)
+        {
+            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
             {
-                context.TenantSubscriptions.Add(subscription);
-                await context.SaveChangesAsync();
+                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to save the new tenant subscription for the domain with Database Username {subscription.PgsqlDatabaseUsername}.");
-                throw;
-            }
+
+            var existing = await context.TenantSubscriptions.Where(_ => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername).SingleAsync();
+            existing.UtilizationDetails = tenantSubscription.UtilizationDetails;
+            existing.PlanId = tenantSubscription.PlanId;
+            context.Update(existing);
+            await context.SaveChangesAsync();
         }
 
         public async Task<TenantSubscription> GetTenantSubscriptionByPgsqlDatabaseUsername(string pgsqlDatabaseUsername)
@@ -43,7 +50,10 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
             }
 
-            return await context.TenantSubscriptions.Where(_ => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername).SingleAsync();
+            return await context.TenantSubscriptions
+                            .Where(_ => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername)
+                            .Include(_ => _.UtilizationDetails)
+                            .SingleAsync();
         }
     }
 }

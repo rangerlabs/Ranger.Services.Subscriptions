@@ -40,7 +40,7 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                     b.ToTable("data_protection_keys");
                 });
 
-            modelBuilder.Entity("TenantSubscription", b =>
+            modelBuilder.Entity("Ranger.Services.Subscriptions.Data.TenantSubscription", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,6 +73,54 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("tenant_subscriptions");
+                });
+
+            modelBuilder.Entity("Ranger.Services.Subscriptions.Data.UtilizationDetails", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int>("AccountCount")
+                        .HasColumnName("account_count")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GeofenceCount")
+                        .HasColumnName("geofence_count")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IntegrationCount")
+                        .HasColumnName("integration_count")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProjectCount")
+                        .HasColumnName("project_count")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantSubscriptionId")
+                        .HasColumnName("tenant_subscription_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("pk_utilization_details");
+
+                    b.HasIndex("TenantSubscriptionId")
+                        .IsUnique()
+                        .HasName("ix_utilization_details_tenant_subscription_id");
+
+                    b.ToTable("utilization_details");
+                });
+
+            modelBuilder.Entity("Ranger.Services.Subscriptions.Data.UtilizationDetails", b =>
+                {
+                    b.HasOne("Ranger.Services.Subscriptions.Data.TenantSubscription", "TenantSubscription")
+                        .WithOne("UtilizationDetails")
+                        .HasForeignKey("Ranger.Services.Subscriptions.Data.UtilizationDetails", "TenantSubscriptionId")
+                        .HasConstraintName("fk_utilization_details_tenant_subscriptions_tenant_subscriptio~")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -9,15 +9,15 @@ namespace Ranger.Services.Subscriptions
 {
     public static class ChargeBeeService
     {
-        public static async Task<SubscriptionLimitDetails> GetSubscriptLimitDetails(string subscriptionId)
+        public static async Task<LimitFields> GetSubscriptLimitDetails(string planId)
         {
-            if (string.IsNullOrWhiteSpace(subscriptionId))
+            if (string.IsNullOrWhiteSpace(planId))
             {
-                throw new ArgumentException($"{nameof(subscriptionId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(planId)} was null or whitespace.");
             }
 
-            var entityResult = await Subscription.Retrieve(subscriptionId).RequestAsync();
-            return entityResult.Subscription.MetaData.ToObject<SubscriptionLimitDetails>(
+            var entityResult = await Plan.Retrieve(planId).RequestAsync();
+            return entityResult.Plan.MetaData.ToObject<LimitFields>(
                 new JsonSerializer
                 {
                     MissingMemberHandling = MissingMemberHandling.Error
@@ -80,7 +80,14 @@ namespace Ranger.Services.Subscriptions
             {
                 SubscriptionId = entityResult.Subscription.Id,
                 PlanId = "sandbox",
-                PgsqlDatabaseUsername = pgsqlDatabaseUsername
+                PgsqlDatabaseUsername = pgsqlDatabaseUsername,
+                UtilizationDetails = new UtilizationDetails
+                {
+                    GeofenceCount = 0,
+                    ProjectCount = 0,
+                    IntegrationCount = 0,
+                    AccountCount = 1
+                }
             };
         }
     }
