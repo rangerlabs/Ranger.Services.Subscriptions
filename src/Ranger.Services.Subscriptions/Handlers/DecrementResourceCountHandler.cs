@@ -49,14 +49,47 @@ namespace Ranger.Services.Subscriptions
             {
                 var tenantSubscription = await subscriptionsRepository.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
 
-                newCount = message.Resource switch
+                switch (message.Resource)
                 {
-                    ResourceEnum.Project => tenantSubscription.UtilizationDetails.ProjectCount--,
-                    ResourceEnum.Account => tenantSubscription.UtilizationDetails.AccountCount--,
-                    ResourceEnum.Goefence => tenantSubscription.UtilizationDetails.GeofenceCount--,
-                    ResourceEnum.Integration => tenantSubscription.UtilizationDetails.IntegrationCount--,
-                    _ => throw new Exception("The resource was not valid.")
-                };
+                    case ResourceEnum.Project:
+                        {
+                            newCount = --tenantSubscription.UtilizationDetails.ProjectCount;
+                            if (newCount < 0)
+                            {
+                                throw new RangerException("There is no utilization to decrement.");
+                            }
+                            break;
+                        }
+                    case ResourceEnum.Integration:
+                        {
+                            newCount = --tenantSubscription.UtilizationDetails.IntegrationCount;
+                            if (newCount < 0)
+                            {
+                                throw new RangerException("There is no utilization to decrement.");
+                            }
+                            break;
+                        }
+                    case ResourceEnum.Geofence:
+                        {
+                            newCount = --tenantSubscription.UtilizationDetails.GeofenceCount;
+                            if (newCount < 0)
+                            {
+                                throw new RangerException("There is no utilization to decrement.");
+                            }
+                            break;
+                        }
+                    case ResourceEnum.Account:
+                        {
+                            newCount = --tenantSubscription.UtilizationDetails.GeofenceCount;
+                            if (newCount < 0)
+                            {
+                                throw new RangerException("There is no utilization to decrement.");
+                            }
+                            break;
+                        }
+                    default:
+                        throw new Exception("The resource was not valid.");
+                }
 
                 await subscriptionsRepository.UpdateTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername, tenantSubscription);
             }

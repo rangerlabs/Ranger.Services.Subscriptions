@@ -136,7 +136,7 @@ namespace Ranger.Services.Subscriptions
             LimitFields utilized = null;
             try
             {
-                limit = await ChargeBeeService.GetSubscriptLimitDetails(tenantSubscription.PlanId);
+                limit = await ChargeBeeService.GetSubscriptLimitDetailsAsync(tenantSubscription.PlanId);
             }
             catch (Exception ex)
             {

@@ -56,7 +56,7 @@ namespace Ranger.Services.Subscriptions
                 return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
             });
 
-            services.AddEntityFrameworkNpgsql().AddDbContext<SubscriptionsDbContext>(options =>
+            services.AddDbContext<SubscriptionsDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },

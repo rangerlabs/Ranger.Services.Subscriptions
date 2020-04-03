@@ -9,7 +9,7 @@ namespace Ranger.Services.Subscriptions
 {
     public static class ChargeBeeService
     {
-        public static async Task<LimitFields> GetSubscriptLimitDetails(string planId)
+        public static async Task<LimitFields> GetSubscriptLimitDetailsAsync(string planId)
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
