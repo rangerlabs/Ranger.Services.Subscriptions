@@ -43,11 +43,11 @@ namespace Ranger.Services.Subscriptions
             return entityResult?.HostedPage?.Url;
         }
 
-        public static async Task<TenantSubscription> CreateNewTenantSubscription(string pgsqlDatabaseUsername, string organizationName, string email, string firstName, string lastName)
+        public static async Task<TenantSubscription> CreateNewTenantSubscription(string tenantId, string organizationName, string email, string firstName, string lastName)
         {
-            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(organizationName))
             {
@@ -70,7 +70,7 @@ namespace Ranger.Services.Subscriptions
                                 .PlanId("sandbox")
                                 .AutoCollection(AutoCollectionEnum.Off)
                                 .CustomerCompany(organizationName)
-                                .CustomerId(pgsqlDatabaseUsername)
+                                .CustomerId(tenantId)
                                 .CustomerFirstName(firstName)
                                 .CustomerLastName(lastName)
                                 .CustomerEmail(email)
@@ -80,7 +80,7 @@ namespace Ranger.Services.Subscriptions
             {
                 SubscriptionId = entityResult.Subscription.Id,
                 PlanId = "sandbox",
-                PgsqlDatabaseUsername = pgsqlDatabaseUsername,
+                TenantId = tenantId,
                 UtilizationDetails = new UtilizationDetails
                 {
                     GeofenceCount = 0,

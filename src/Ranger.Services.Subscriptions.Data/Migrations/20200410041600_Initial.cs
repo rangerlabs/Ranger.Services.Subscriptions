@@ -27,7 +27,7 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    pgsql_database_username = table.Column<string>(nullable: false),
+                    tenant_id = table.Column<string>(nullable: false),
                     subscription_id = table.Column<string>(nullable: false),
                     plan_id = table.Column<string>(nullable: false)
                 },
@@ -60,15 +60,15 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_tenant_subscriptions_pgsql_database_username",
-                table: "tenant_subscriptions",
-                column: "pgsql_database_username",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_tenant_subscriptions_subscription_id",
                 table: "tenant_subscriptions",
                 column: "subscription_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tenant_subscriptions_tenant_id",
+                table: "tenant_subscriptions",
+                column: "tenant_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(

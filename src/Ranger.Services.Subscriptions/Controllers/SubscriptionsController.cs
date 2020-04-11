@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -10,126 +11,102 @@ using Ranger.Services.Subscriptions.Data;
 namespace Ranger.Services.Subscriptions
 {
     [ApiController]
+    [ApiVersion("1.0")]
     public class SubscriptionsController : ControllerBase
     {
-        private readonly ITenantsClient tenantsClient;
+        private readonly TenantsHttpClient tenantsClient;
         private readonly SubscriptionsRepository subscriptionsRepo;
         private readonly ILogger<SubscriptionsController> logger;
         private readonly ChargeBeeOptions options;
+        private readonly SubscriptionsService subscriptionsService;
 
-        public SubscriptionsController(ITenantsClient tenantsClient, SubscriptionsRepository subscriptionsRepo, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
+        public SubscriptionsController(TenantsHttpClient tenantsClient, SubscriptionsRepository subscriptionsRepo, SubscriptionsService subscriptionsService, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
         {
+            this.subscriptionsService = subscriptionsService;
             this.tenantsClient = tenantsClient;
             this.subscriptionsRepo = subscriptionsRepo;
             this.options = options;
             this.logger = logger;
         }
 
-        [HttpGet("{domain}/subscriptions/checkout-existing-hosted-page-url")]
-        public async Task<IActionResult> GetCheckoutExistingHostedPageUrl([FromRoute] string domain, [FromQuery] string planId)
+        ///<summary>
+        /// Gets the URL for the tenant's checkout page based on their current subscription
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        ///<param name="planId">The tenant's current ChargeBee plan id</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/subscriptions/{tenantId}/{planId}/checkout-existing-hosted-page-url")]
+        public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId, string planId)
         {
-            if (string.IsNullOrWhiteSpace(planId))
-            {
-                var apiErrorContent = new ApiErrorContent();
-                apiErrorContent.Errors.Add($"{nameof(planId)} was null or whitespace.");
-                return BadRequest(apiErrorContent);
-            }
-
-            ContextTenant tenant = null;
-            try
-            {
-                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-            RangerChargeBeeHostedPage result = null;
-            try
-            {
-                var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
-                if (hostedPageUrl is null)
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                RangerChargeBeeHostedPage result = null;
+                try
                 {
-                    throw new Exception("Hosted Page Url response was null.");
+                    var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
+                    if (hostedPageUrl is null)
+                    {
+                        throw new Exception("Hosted Page Url response was null.");
+                    }
+                    result = new RangerChargeBeeHostedPage
+                    {
+                        Url = hostedPageUrl
+                    };
                 }
-                result = new RangerChargeBeeHostedPage
+                catch (Exception ex)
                 {
-                    Url = hostedPageUrl
-                };
+                    logger.LogError(ex, $"Failed to get the hosted page for Subscription Id '{tenantSubscription.SubscriptionId}'.");
+                    throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
+                }
+                return new ApiResponse(result);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to get the hosted page for Subscription Id '{tenantSubscription.SubscriptionId}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to retrieve subscription id for tenant id '{tenantId}'");
+                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
             }
-            return Ok(result);
         }
 
-        [HttpGet("{domain}/subscriptions/plan-id")]
-        public async Task<IActionResult> GetSubscription([FromRoute] string domain)
+        ///<summary>
+        /// Gets the ChargeBee plan id for the requested tenant
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/subscriptions/{tenantId}/plan-id")]
+        public async Task<ApiResponse> GetSubscription(string tenantId)
         {
-            ContextTenant tenant = null;
-            try
-            {
-                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to retrieve SubscriptionId for TenantId '{tenantId}'.");
+                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
             }
-            return Ok(new { PlanId = tenantSubscription.PlanId });
+            return new ApiResponse("Success", tenantSubscription.PlanId);
         }
 
-        [HttpGet("{domain}/subscriptions/limit-details")]
-        public async Task<IActionResult> GetLimitDetails([FromRoute] string domain)
+        ///<summary>
+        /// Gets the requested tenant's subscription limits
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/subscriptions{tenantId}/limit-details")]
+        public async Task<ApiResponse> GetLimitDetails(string tenantId)
         {
-            var apiErrorContent = new ApiErrorContent();
-
-            ContextTenant tenant = null;
-            try
-            {
-                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve ContextTenant for domain '{domain}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve SubscriptionId for PgsqlDatabaseUsername '{tenant.DatabaseUsername}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to retrieve SubscriptionId for TenantId '{tenantId}'.");
+                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
             }
 
             LimitFields limit = null;
@@ -141,11 +118,11 @@ namespace Ranger.Services.Subscriptions
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
             }
             try
             {
-                var _ = await subscriptionsRepo.GetTenantSubscriptionByPgsqlDatabaseUsername(tenant.DatabaseUsername);
+                var _ = await subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
                 utilized = new LimitFields
                 {
                     Geofences = _.UtilizationDetails.GeofenceCount,
@@ -157,9 +134,53 @@ namespace Ranger.Services.Subscriptions
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Failed to retrieve utilized limit details.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
             }
-            return Ok(new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
+            return new ApiResponse("Success", new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
+        }
+
+        ///<summary>
+        /// Increments the requested tenant's specified resource
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        ///<param name="resourceModel">Represents the resource to increment</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
+        [HttpPut("/subscriptions/{tenantId}/resources/increment")]
+        public async Task<ApiResponse> IncrementSubscription(string tenantId, ResourceModel resourceModel)
+        {
+            int newCount = 0;
+            try
+            {
+                newCount = await subscriptionsService.IncrementResource(tenantId, resourceModel.Resource);
+            }
+            catch (RangerException ex)
+            {
+                return new ApiResponse(ex.Message, statusCode: StatusCodes.Status402PaymentRequired);
+            }
+            return new ApiResponse("Success", newCount);
+        }
+
+        ///<summary>
+        /// Decrements the requested tenant's specified resource
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        ///<param name="resourceModel">Represents the resource to increment</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status304NotModified)]
+        [HttpPut("/subscriptions/{tenantId}/resources/decrement")]
+        public async Task<ApiResponse> DecrementSubscription(string tenantId, ResourceModel resourceModel)
+        {
+            int newCount = 0;
+            try
+            {
+                newCount = await subscriptionsService.DecrementResource(tenantId, resourceModel.Resource);
+            }
+            catch (RangerException)
+            {
+                return new ApiResponse("All resources have been removed", 0, StatusCodes.Status304NotModified);
+            }
+            return new ApiResponse("Success", newCount);
         }
     }
 }

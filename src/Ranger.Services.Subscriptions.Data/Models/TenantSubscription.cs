@@ -9,7 +9,7 @@ namespace Ranger.Services.Subscriptions.Data
         [Required]
         public UtilizationDetails UtilizationDetails { get; set; }
         [Required]
-        public string PgsqlDatabaseUsername { get; set; }
+        public string TenantId { get; set; }
         [Required]
         public string SubscriptionId { get; set; }
         [Required]

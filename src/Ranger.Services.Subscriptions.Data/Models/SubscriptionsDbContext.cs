@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
 
@@ -61,7 +59,7 @@ namespace Ranger.Services.Subscriptions.Data
                 encryptionHelper?.SetEncrytedPropertyAccessMode(entity);
             }
 
-            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.PgsqlDatabaseUsername).IsUnique();
+            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.TenantId).IsUnique();
             modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.SubscriptionId).IsUnique();
             modelBuilder.Entity<TenantSubscription>(entity =>
             {

@@ -48,11 +48,6 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("PgsqlDatabaseUsername")
-                        .IsRequired()
-                        .HasColumnName("pgsql_database_username")
-                        .HasColumnType("text");
-
                     b.Property<string>("PlanId")
                         .IsRequired()
                         .HasColumnName("plan_id")
@@ -63,13 +58,18 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .HasColumnName("subscription_id")
                         .HasColumnType("text");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnName("tenant_id")
+                        .HasColumnType("text");
+
                     b.HasKey("Id")
                         .HasName("pk_tenant_subscriptions");
 
-                    b.HasIndex("PgsqlDatabaseUsername")
+                    b.HasIndex("SubscriptionId")
                         .IsUnique();
 
-                    b.HasIndex("SubscriptionId")
+                    b.HasIndex("TenantId")
                         .IsUnique();
 
                     b.ToTable("tenant_subscriptions");
