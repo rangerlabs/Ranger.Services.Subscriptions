@@ -42,31 +42,25 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
-                RangerChargeBeeHostedPage result = null;
-                try
-                {
-                    var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
-                    if (hostedPageUrl is null)
-                    {
-                        throw new Exception("Hosted Page Url response was null.");
-                    }
-                    result = new RangerChargeBeeHostedPage
-                    {
-                        Url = hostedPageUrl
-                    };
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, $"Failed to get the hosted page for Subscription Id '{tenantSubscription.SubscriptionId}'.");
-                    throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
-                }
-                return new ApiResponse(result);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve subscription id for tenant id '{tenantId}'");
-                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to get the tenant subscription");
+                throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
+
+            RangerChargeBeeHostedPage result = null;
+            var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
+            if (hostedPageUrl is null)
+            {
+                logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'.");
+                throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
+            }
+            result = new RangerChargeBeeHostedPage
+            {
+                Url = hostedPageUrl
+            };
+            return new ApiResponse("Successfully retrieved checkout hosted page url", result);
         }
 
         ///<summary>
@@ -84,10 +78,10 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve SubscriptionId for TenantId '{tenantId}'.");
-                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to retrieve subscription plan id for tenant id '{tenantId}'.");
+                throw new ApiException("Failed to retrieve subscription plan id", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Success", tenantSubscription.PlanId);
+            return new ApiResponse("Successfully retrieved plan id", tenantSubscription.PlanId);
         }
 
         ///<summary>
@@ -99,44 +93,26 @@ namespace Ranger.Services.Subscriptions
         public async Task<ApiResponse> GetLimitDetails(string tenantId)
         {
             TenantSubscription tenantSubscription = null;
-            try
-            {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve SubscriptionId for TenantId '{tenantId}'.");
-                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
-            }
-
             LimitFields limit = null;
             LimitFields utilized = null;
             try
             {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
                 limit = await ChargeBeeService.GetSubscriptLimitDetailsAsync(tenantSubscription.PlanId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee.");
-                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
-            }
-            try
-            {
-                var _ = await subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
                 utilized = new LimitFields
                 {
-                    Geofences = _.UtilizationDetails.GeofenceCount,
-                    Integrations = _.UtilizationDetails.IntegrationCount,
-                    Projects = _.UtilizationDetails.ProjectCount,
-                    Accounts = _.UtilizationDetails.AccountCount
+                    Geofences = tenantSubscription.UtilizationDetails.GeofenceCount,
+                    Integrations = tenantSubscription.UtilizationDetails.IntegrationCount,
+                    Projects = tenantSubscription.UtilizationDetails.ProjectCount,
+                    Accounts = tenantSubscription.UtilizationDetails.AccountCount
                 };
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve utilized limit details.");
-                throw new ApiException("Internal Server Error", StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee");
+                throw new ApiException("Failed to retrieve limit details from ChargeBee", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Success", new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
+            return new ApiResponse("Successfully retrieved subscription limit details", new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
         }
 
         ///<summary>
@@ -156,9 +132,9 @@ namespace Ranger.Services.Subscriptions
             }
             catch (RangerException ex)
             {
-                return new ApiResponse(ex.Message, statusCode: StatusCodes.Status402PaymentRequired);
+                throw new ApiException(ex.Message, statusCode: StatusCodes.Status402PaymentRequired);
             }
-            return new ApiResponse("Success", newCount);
+            return new ApiResponse("Successfully incremented resource", newCount);
         }
 
         ///<summary>
@@ -178,9 +154,9 @@ namespace Ranger.Services.Subscriptions
             }
             catch (RangerException)
             {
-                return new ApiResponse("All resources have been removed", 0, StatusCodes.Status304NotModified);
+                throw new ApiException("All resources have been removed", statusCode: StatusCodes.Status304NotModified);
             }
-            return new ApiResponse("Success", newCount);
+            return new ApiResponse("Successfully decremented resource", newCount);
         }
     }
 }
