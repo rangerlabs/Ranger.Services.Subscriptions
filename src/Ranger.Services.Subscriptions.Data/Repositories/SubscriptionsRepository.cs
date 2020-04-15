@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ranger.Common;
 
 namespace Ranger.Services.Subscriptions.Data
 {
@@ -36,7 +37,11 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
 
-            var existing = await context.TenantSubscriptions.Where(_ => _.TenantId == tenantId).SingleAsync();
+            var existing = await context.TenantSubscriptions.Where(_ => _.TenantId == tenantId).SingleOrDefaultAsync();
+            if (existing is null)
+            {
+                throw new RangerException("No tenant found for the provided tenant id");
+            }
             existing.UtilizationDetails = tenantSubscription.UtilizationDetails;
             existing.PlanId = tenantSubscription.PlanId;
             context.Update(existing);
@@ -50,10 +55,14 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
 
-            return await context.TenantSubscriptions
+            var result = await context.TenantSubscriptions
                             .Where(_ => _.TenantId == tenantId)
                             .Include(_ => _.UtilizationDetails)
-                            .SingleAsync();
+                            .SingleOrDefaultAsync();
+            if (result is null)
+            {
+                throw new RangerException("No tenant found for the provided tenant id");
+            }
         }
     }
 }

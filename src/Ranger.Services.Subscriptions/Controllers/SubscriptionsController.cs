@@ -35,6 +35,7 @@ namespace Ranger.Services.Subscriptions
         ///<param name="tenantId">The tenant's unique identifier</param>
         ///<param name="planId">The tenant's current ChargeBee plan id</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/{planId}/checkout-existing-hosted-page-url")]
         public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId, string planId)
         {
@@ -42,6 +43,10 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                if (tenantSubscription is null)
+                {
+                    throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
+                }
             }
             catch (Exception ex)
             {
@@ -68,6 +73,7 @@ namespace Ranger.Services.Subscriptions
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/plan-id")]
         public async Task<ApiResponse> GetSubscription(string tenantId)
         {
@@ -75,6 +81,10 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                if (tenantSubscription is null)
+                {
+                    throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
+                }
             }
             catch (Exception ex)
             {
@@ -89,6 +99,7 @@ namespace Ranger.Services.Subscriptions
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions{tenantId}/limit-details")]
         public async Task<ApiResponse> GetLimitDetails(string tenantId)
         {
@@ -98,6 +109,13 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+            }
+            catch (RangerException ex)
+            {
+                throw new ApiException(ex.Message, statusCode: StatusCodes.Status402PaymentRequired);
+            }
+            try
+            {
                 limit = await ChargeBeeService.GetSubscriptLimitDetailsAsync(tenantSubscription.PlanId);
                 utilized = new LimitFields
                 {
@@ -121,6 +139,7 @@ namespace Ranger.Services.Subscriptions
         ///<param name="tenantId">The tenant's unique identifier</param>
         ///<param name="resourceModel">Represents the resource to increment</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
         [HttpPut("/subscriptions/{tenantId}/resources/increment")]
         public async Task<ApiResponse> IncrementSubscription(string tenantId, ResourceModel resourceModel)
@@ -144,6 +163,7 @@ namespace Ranger.Services.Subscriptions
         ///<param name="resourceModel">Represents the resource to increment</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("/subscriptions/{tenantId}/resources/decrement")]
         public async Task<ApiResponse> DecrementSubscription(string tenantId, ResourceModel resourceModel)
         {

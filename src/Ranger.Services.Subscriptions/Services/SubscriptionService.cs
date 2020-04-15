@@ -17,10 +17,10 @@ namespace Ranger.Services.Subscriptions
             this.subscriptionsRepository = subscriptionsRepository;
         }
 
-        public async Task<int> IncrementResource(string TenantId, ResourceEnum resource)
+        public async Task<int> IncrementResource(string tenantId, ResourceEnum resource)
         {
             int newCount = 0;
-            var tenantSubscription = await subscriptionsRepository.GetTenantSubscriptionByTenantId(TenantId);
+            var tenantSubscription = await subscriptionsRepository.GetTenantSubscriptionByTenantId(tenantId);
             LimitFields limitDetails = null;
             try
             {
@@ -74,7 +74,7 @@ namespace Ranger.Services.Subscriptions
             }
             try
             {
-                await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(TenantId, tenantSubscription);
+                await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(tenantId, tenantSubscription);
             }
             catch (Exception ex)
             {
@@ -83,9 +83,9 @@ namespace Ranger.Services.Subscriptions
             return newCount;
         }
 
-        public async Task<int> DecrementResource(string TenantId, ResourceEnum resource)
+        public async Task<int> DecrementResource(string tenantId, ResourceEnum resource)
         {
-            var tenantSubscription = await subscriptionsRepository.GetTenantSubscriptionByTenantId(TenantId);
+            var tenantSubscription = await subscriptionsRepository.GetTenantSubscriptionByTenantId(tenantId);
 
             int newCount = 0;
             switch (resource)
@@ -131,7 +131,7 @@ namespace Ranger.Services.Subscriptions
             }
             try
             {
-                await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(TenantId, tenantSubscription);
+                await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(tenantId, tenantSubscription);
             }
             catch (Exception ex)
             {
@@ -139,7 +139,7 @@ namespace Ranger.Services.Subscriptions
             }
 
 
-            await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(TenantId, tenantSubscription);
+            await subscriptionsRepository.UpdateTenantSubscriptionByTenantId(tenantId, tenantSubscription);
             return newCount;
         }
     }
