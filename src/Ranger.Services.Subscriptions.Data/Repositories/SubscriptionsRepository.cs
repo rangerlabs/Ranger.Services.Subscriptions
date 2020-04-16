@@ -63,6 +63,7 @@ namespace Ranger.Services.Subscriptions.Data
             {
                 throw new RangerException("No tenant found for the provided tenant id");
             }
+            return result;
         }
     }
 }
