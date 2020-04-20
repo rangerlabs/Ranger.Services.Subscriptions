@@ -47,14 +47,6 @@ namespace Ranger.Services.Subscriptions
             services.AddSwaggerGen("Subscriptions API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("subscriptionApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("subscriptionApi");
-                    });
-            });
-
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
@@ -69,7 +61,6 @@ namespace Ranger.Services.Subscriptions
                 {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "subscriptionsApi";
-
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -95,8 +86,12 @@ namespace Ranger.Services.Subscriptions
 
             app.UseSwagger("v1", "Subscriptions API");
             app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
