@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Common;
+using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 
@@ -46,6 +47,9 @@ namespace Ranger.Services.Subscriptions
             services.AddAutoWrapper();
             services.AddSwaggerGen("Subscriptions API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
+
+            services.AddPollyPolicyRegistry();
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
 
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
