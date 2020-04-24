@@ -13,7 +13,7 @@ namespace Ranger.Services.Subscriptions
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
-                throw new ArgumentException($"{nameof(planId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(planId)} was null or whitespace");
             }
 
             var entityResult = await Plan.Retrieve(planId).RequestAsync();
@@ -28,11 +28,11 @@ namespace Ranger.Services.Subscriptions
         {
             if (string.IsNullOrWhiteSpace(subscriptionId))
             {
-                throw new ArgumentException($"{nameof(subscriptionId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(subscriptionId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(planId))
             {
-                throw new ArgumentException($"{nameof(planId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(planId)} was null or whitespace");
             }
 
             var entityResult = await HostedPage.CheckoutExisting()
@@ -47,23 +47,23 @@ namespace Ranger.Services.Subscriptions
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(organizationName))
             {
-                throw new ArgumentException($"{nameof(organizationName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(organizationName)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(email))
             {
-                throw new ArgumentException($"{nameof(email)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(email)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(firstName))
             {
-                throw new ArgumentException($"{nameof(firstName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(firstName)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(lastName))
             {
-                throw new ArgumentException($"{nameof(lastName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(lastName)} was null or whitespace");
             }
 
             var entityResult = await Subscription.Create()

@@ -60,7 +60,7 @@ namespace Ranger.Services.Subscriptions
             var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
             if (hostedPageUrl is null)
             {
-                logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'.");
+                logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'");
                 throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
             result = new RangerChargeBeeHostedPage
@@ -90,7 +90,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve subscription plan id for tenant id '{tenantId}'.");
+                logger.LogError(ex, $"Failed to retrieve subscription plan id for tenant id '{tenantId}'");
                 throw new ApiException("Failed to retrieve subscription plan id", StatusCodes.Status500InternalServerError);
             }
             return new ApiResponse("Successfully retrieved plan id", tenantSubscription.PlanId);

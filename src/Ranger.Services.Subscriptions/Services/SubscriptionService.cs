@@ -28,7 +28,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to retrieve subscription limit details from ChargeBee. Permitting possible excess resource creation.");
+                logger.LogError(ex, "Failed to retrieve subscription limit details from ChargeBee. Permitting possible excess resource creation");
             }
 
             switch (resource)
@@ -38,7 +38,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = ++tenantSubscription.UtilizationDetails.ProjectCount;
                         if (newCount > limitDetails.Projects)
                         {
-                            throw new RangerException("The request would exceed the Project subscription limit.");
+                            throw new RangerException("The request would exceed the Project subscription limit");
                         }
                         break;
                     }
@@ -47,7 +47,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = ++tenantSubscription.UtilizationDetails.IntegrationCount;
                         if (newCount > limitDetails.Integrations)
                         {
-                            throw new RangerException("The request would exceed the Integration subscription limit.");
+                            throw new RangerException("The request would exceed the Integration subscription limit");
                         }
                         break;
                     }
@@ -56,7 +56,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = ++tenantSubscription.UtilizationDetails.GeofenceCount;
                         if (newCount > limitDetails.Geofences)
                         {
-                            throw new RangerException("The request would exceed the Geofence subscription limit.");
+                            throw new RangerException("The request would exceed the Geofence subscription limit");
                         }
                         break;
                     }
@@ -65,12 +65,12 @@ namespace Ranger.Services.Subscriptions
                         newCount = ++tenantSubscription.UtilizationDetails.AccountCount;
                         if (newCount > limitDetails.Accounts)
                         {
-                            throw new RangerException("The request would exceed the Account subscription limit.");
+                            throw new RangerException("The request would exceed the Account subscription limit");
                         }
                         break;
                     }
                 default:
-                    throw new ArgumentException("The resource was not valid.");
+                    throw new ArgumentException("The resource was not valid");
             }
             try
             {
@@ -78,7 +78,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                throw new RangerException("Failed to increment the resource count.", ex);
+                throw new RangerException("Failed to increment the resource count", ex);
             }
             return newCount;
         }
@@ -95,7 +95,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = --tenantSubscription.UtilizationDetails.ProjectCount;
                         if (newCount < 0)
                         {
-                            throw new RangerException("There is no utilization to decrement.");
+                            throw new RangerException("There is no utilization to decrement");
                         }
                         break;
                     }
@@ -104,7 +104,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = --tenantSubscription.UtilizationDetails.IntegrationCount;
                         if (newCount < 0)
                         {
-                            throw new RangerException("There is no utilization to decrement.");
+                            throw new RangerException("There is no utilization to decrement");
                         }
                         break;
                     }
@@ -113,7 +113,7 @@ namespace Ranger.Services.Subscriptions
                         newCount = --tenantSubscription.UtilizationDetails.GeofenceCount;
                         if (newCount < 0)
                         {
-                            throw new RangerException("There is no utilization to decrement.");
+                            throw new RangerException("There is no utilization to decrement");
                         }
                         break;
                     }
@@ -122,12 +122,12 @@ namespace Ranger.Services.Subscriptions
                         newCount = --tenantSubscription.UtilizationDetails.GeofenceCount;
                         if (newCount < 0)
                         {
-                            throw new RangerException("There is no utilization to decrement.");
+                            throw new RangerException("There is no utilization to decrement");
                         }
                         break;
                     }
                 default:
-                    throw new Exception("The resource was not valid.");
+                    throw new Exception("The resource was not valid");
             }
             try
             {
@@ -135,7 +135,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                throw new RangerException("Failed to increment the resource count.", ex);
+                throw new RangerException("Failed to increment the resource count", ex);
             }
 
 

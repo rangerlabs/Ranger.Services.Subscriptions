@@ -34,7 +34,7 @@ namespace Ranger.Services.Subscriptions.Data
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             var existing = await context.TenantSubscriptions.Where(_ => _.TenantId == tenantId).SingleOrDefaultAsync();
@@ -52,7 +52,7 @@ namespace Ranger.Services.Subscriptions.Data
         {
             if (String.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             var result = await context.TenantSubscriptions

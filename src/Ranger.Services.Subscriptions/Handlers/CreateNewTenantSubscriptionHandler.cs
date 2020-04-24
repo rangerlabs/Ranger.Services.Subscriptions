@@ -37,7 +37,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogCritical(ex, $"Failed to create the new sandbox subscription for tenant with domain {message.TenantId}.");
+                logger.LogCritical(ex, $"Failed to create the new sandbox subscription for tenant with domain {message.TenantId}");
                 throw;
             }
 
@@ -47,7 +47,7 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogCritical(ex, $"Failed to persist the newly created subscription for tenant with domain {message.TenantId}.");
+                logger.LogCritical(ex, $"Failed to persist the newly created subscription for tenant with domain {message.TenantId}");
                 throw;
             }
             busPublisher.Publish(new NewTenantSubscriptionCreated(), context);

@@ -14,7 +14,7 @@ namespace Ranger.Services.Subscriptions
         {
             if (newCount < 1)
             {
-                throw new ArgumentException($"{nameof(newCount)} was less than 1.");
+                throw new ArgumentException($"{nameof(newCount)} was less than 1");
             }
             this.Resource = resource;
             this.NewCount = newCount;
