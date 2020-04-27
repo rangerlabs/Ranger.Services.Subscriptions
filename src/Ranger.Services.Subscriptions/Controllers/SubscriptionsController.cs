@@ -63,11 +63,7 @@ namespace Ranger.Services.Subscriptions
                 logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'");
                 throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
-            result = new RangerChargeBeeHostedPage
-            {
-                Url = hostedPageUrl
-            };
-            return new ApiResponse("Successfully retrieved checkout hosted page url", result);
+            return new ApiResponse("Successfully retrieved checkout hosted page url", hostedPageUrl);
         }
 
         ///<summary>
@@ -132,7 +128,7 @@ namespace Ranger.Services.Subscriptions
                 logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee");
                 throw new ApiException("Failed to retrieve limit details from ChargeBee", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Successfully retrieved subscription limit details", new SubscriptionLimitDetails { Limit = limit, Utilized = utilized });
+            return new ApiResponse("Successfully retrieved subscription limit details", new SubscriptionLimitDetails { PlanId = tenantSubscription.PlanId, Limit = limit, Utilized = utilized });
         }
 
         ///<summary>
