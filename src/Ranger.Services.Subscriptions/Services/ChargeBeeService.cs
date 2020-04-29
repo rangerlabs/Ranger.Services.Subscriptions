@@ -24,7 +24,7 @@ namespace Ranger.Services.Subscriptions
                 });
         }
 
-        public static async Task<string> GetHostedPageUrl(string subscriptionId, string planId)
+        public static async Task<HostedPage> GetHostedPageUrl(string subscriptionId, string planId)
         {
             if (string.IsNullOrWhiteSpace(subscriptionId))
             {
@@ -40,7 +40,7 @@ namespace Ranger.Services.Subscriptions
                                 .SubscriptionPlanId(planId)
                                 .RequestAsync();
 
-            return entityResult?.HostedPage?.Url;
+            return entityResult?.HostedPage;
         }
 
         public static async Task<TenantSubscription> CreateNewTenantSubscription(string tenantId, string organizationName, string email, string firstName, string lastName)

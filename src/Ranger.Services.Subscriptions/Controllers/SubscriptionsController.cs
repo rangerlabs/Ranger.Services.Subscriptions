@@ -56,7 +56,6 @@ namespace Ranger.Services.Subscriptions
                 throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
 
-            RangerChargeBeeHostedPage result = null;
             var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
             if (hostedPageUrl is null)
             {
