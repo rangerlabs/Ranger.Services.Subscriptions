@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChargeBee.Models;
 using ChargeBee.Models.Enums;
@@ -22,6 +23,17 @@ namespace Ranger.Services.Subscriptions
                 {
                     MissingMemberHandling = MissingMemberHandling.Error
                 });
+        }
+
+        public static async Task<IEnumerable<RangerPlan>> GetAllSubscriptionLimitDetailsAsync()
+        {
+            var listResult = await Plan.List().Status().Is(Plan.StatusEnum.Active).RequestAsync();
+            IEnumerable<RangerPlan> plans = new List<RangerPlan>();
+            foreach (var item in listResult.List)
+            {
+                var plan = new RangerPlan(item.Plan.Id, item.Plan.MetaData.ToObject<LimitFields>(new JsonSerializer { MissingMemberHandling = MissingMemberHandling.Error }));
+            }
+            return plans;
         }
 
         public static async Task<HostedPage> GetHostedPageUrl(string subscriptionId, string planId)
@@ -80,14 +92,7 @@ namespace Ranger.Services.Subscriptions
             {
                 SubscriptionId = entityResult.Subscription.Id,
                 PlanId = "sandbox",
-                TenantId = tenantId,
-                UtilizationDetails = new UtilizationDetails
-                {
-                    GeofenceCount = 0,
-                    ProjectCount = 0,
-                    IntegrationCount = 0,
-                    AccountCount = 1
-                }
+                TenantId = tenantId
             };
         }
     }

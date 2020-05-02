@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,6 @@ namespace Ranger.Services.Subscriptions.Data
             {
                 throw new RangerException("No tenant found for the provided tenant id");
             }
-            existing.UtilizationDetails = tenantSubscription.UtilizationDetails;
             existing.PlanId = tenantSubscription.PlanId;
             context.Update(existing);
             await context.SaveChangesAsync();
@@ -57,13 +57,17 @@ namespace Ranger.Services.Subscriptions.Data
 
             var result = await context.TenantSubscriptions
                             .Where(_ => _.TenantId == tenantId)
-                            .Include(_ => _.UtilizationDetails)
                             .SingleOrDefaultAsync();
             if (result is null)
             {
                 throw new RangerException("No tenant found for the provided tenant id");
             }
             return result;
+        }
+
+        public async Task<IEnumerable<TenantSubscription>> GetAllTenantSubscriptions()
+        {
+            return await context.TenantSubscriptions.ToListAsync();
         }
     }
 }

@@ -101,11 +101,7 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapControllers();
             });
             this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<CreateNewTenantSubscription>()
-                .SubscribeCommand<IncrementResourceCount>((c, e) =>
-                    new IncrementResourceCountRejected(e.Message, ""))
-                .SubscribeCommand<DecrementResourceCount>((c, e) =>
-                    new DecrementResourceCountRejected(e.Message, ""));
+                .SubscribeCommand<CreateNewTenantSubscription>((c, e) => new NewTenantSubscriptionRejected(e.Message, ""));
         }
 
         private void OnShutdown()

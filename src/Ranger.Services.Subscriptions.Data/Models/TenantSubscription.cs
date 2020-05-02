@@ -7,8 +7,6 @@ namespace Ranger.Services.Subscriptions.Data
         [Key]
         public int Id { get; set; }
         [Required]
-        public UtilizationDetails UtilizationDetails { get; set; }
-        [Required]
         public string TenantId { get; set; }
         [Required]
         public string SubscriptionId { get; set; }
