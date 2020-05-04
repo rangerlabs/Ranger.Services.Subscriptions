@@ -28,10 +28,10 @@ namespace Ranger.Services.Subscriptions
         public static async Task<IEnumerable<RangerPlan>> GetAllSubscriptionLimitDetailsAsync()
         {
             var listResult = await Plan.List().Status().Is(Plan.StatusEnum.Active).RequestAsync();
-            IEnumerable<RangerPlan> plans = new List<RangerPlan>();
+            var plans = new List<RangerPlan>();
             foreach (var item in listResult.List)
             {
-                var plan = new RangerPlan(item.Plan.Id, item.Plan.MetaData.ToObject<LimitFields>(new JsonSerializer { MissingMemberHandling = MissingMemberHandling.Error }));
+                plans.Add(new RangerPlan(item.Plan.Id, item.Plan.MetaData.ToObject<LimitFields>(new JsonSerializer { MissingMemberHandling = MissingMemberHandling.Error })));
             }
             return plans;
         }

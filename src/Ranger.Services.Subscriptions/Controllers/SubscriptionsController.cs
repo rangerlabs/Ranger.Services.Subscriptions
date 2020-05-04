@@ -118,8 +118,8 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to retrieve limit details from ChargeBee");
-                throw new ApiException("Failed to retrieve limit details from ChargeBee", StatusCodes.Status500InternalServerError);
+                logger.LogError(ex, $"Failed to determine limit details ");
+                throw new ApiException("Failed to determine limit details ", StatusCodes.Status500InternalServerError);
             }
             return new ApiResponse("Successfully retrieved subscription limit details", new SubscriptionLimitDetails { PlanId = tenantSubscription.PlanId, Limit = limit, Utilized = utilized });
         }

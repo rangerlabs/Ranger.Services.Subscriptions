@@ -50,6 +50,10 @@ namespace Ranger.Services.Subscriptions
 
             services.AddPollyPolicyRegistry();
             services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
+            services.AddIdentityHttpClient("http://identity:5000", "IdentityServerApi", "89pCcXHuDYTXY");
+            services.AddGeofencesHttpClient("http://geofences:8085", "geofencesApi", "9pwJgpgpu6PNJi");
+            services.AddIntegrationsHttpClient("http://integrations:8087", "integrationsApi", "6HyhzSoSHvxTG");
 
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
@@ -101,7 +105,10 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapControllers();
             });
             this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<CreateNewTenantSubscription>((c, e) => new NewTenantSubscriptionRejected(e.Message, ""));
+                .SubscribeCommand<CreateNewTenantSubscription>((c, e)
+                    => new NewTenantSubscriptionRejected(e.Message, "")
+                )
+                .SubscribeCommand<ComputeTenantLimitDetails>();
         }
 
         private void OnShutdown()
