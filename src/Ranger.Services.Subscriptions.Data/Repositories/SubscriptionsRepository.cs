@@ -44,6 +44,8 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new RangerException("No tenant found for the provided tenant id");
             }
             existing.PlanId = tenantSubscription.PlanId;
+            existing.Active = tenantSubscription.Active;
+            existing.ScheduledCancellationDate = tenantSubscription.ScheduledCancellationDate;
             context.Update(existing);
             await context.SaveChangesAsync();
         }
@@ -56,11 +58,28 @@ namespace Ranger.Services.Subscriptions.Data
             }
 
             var result = await context.TenantSubscriptions
-                            .Where(_ => _.TenantId == tenantId)
-                            .SingleOrDefaultAsync();
+                .Where(_ => _.TenantId == tenantId)
+                .SingleOrDefaultAsync();
             if (result is null)
             {
                 throw new RangerException("No tenant found for the provided tenant id");
+            }
+            return result;
+        }
+
+        public async Task<TenantSubscription> GetTenantSubscriptionBySubscriptionId(string subscriptionId)
+        {
+            if (String.IsNullOrWhiteSpace(subscriptionId))
+            {
+                throw new ArgumentException($"{nameof(subscriptionId)} was null or whitespace");
+            }
+
+            var result = await context.TenantSubscriptions
+                .Where(_ => _.SubscriptionId == subscriptionId)
+                .SingleOrDefaultAsync();
+            if (result is null)
+            {
+                throw new RangerException("No tenant found for the provided subscription id");
             }
             return result;
         }

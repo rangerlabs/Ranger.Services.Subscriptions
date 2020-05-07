@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Ranger.Services.Subscriptions.Data.Migrations
@@ -29,7 +30,9 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     tenant_id = table.Column<string>(nullable: false),
                     subscription_id = table.Column<string>(nullable: false),
-                    plan_id = table.Column<string>(nullable: false)
+                    plan_id = table.Column<string>(nullable: false),
+                    active = table.Column<bool>(nullable: false),
+                    scheduled_cancellation_date = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {

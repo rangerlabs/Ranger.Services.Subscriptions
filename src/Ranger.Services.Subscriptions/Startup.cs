@@ -108,6 +108,9 @@ namespace Ranger.Services.Subscriptions
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e)
                     => new NewTenantSubscriptionRejected(e.Message, "")
                 )
+                .SubscribeCommand<UpdateSubscription>((c, e)
+                    => new UpdateSubscriptionRejected(e.Message, "")
+                )
                 .SubscribeCommand<ComputeTenantLimitDetails>();
         }
 

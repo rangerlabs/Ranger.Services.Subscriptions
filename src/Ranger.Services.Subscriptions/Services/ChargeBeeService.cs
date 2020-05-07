@@ -92,7 +92,8 @@ namespace Ranger.Services.Subscriptions
             {
                 SubscriptionId = entityResult.Subscription.Id,
                 PlanId = "sandbox",
-                TenantId = tenantId
+                TenantId = tenantId,
+                Active = true
             };
         }
     }

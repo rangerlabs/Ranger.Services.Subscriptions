@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Ranger.Services.Subscriptions.Data
@@ -12,6 +13,8 @@ namespace Ranger.Services.Subscriptions.Data
         public string SubscriptionId { get; set; }
         [Required]
         public string PlanId { get; set; }
-
+        [Required]
+        public bool Active { get; set; }
+        public DateTime ScheduledCancellationDate { get; set; }
     }
 }

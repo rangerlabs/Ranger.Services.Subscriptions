@@ -72,7 +72,7 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/plan-id")]
-        public async Task<ApiResponse> GetSubscription(string tenantId)
+        public async Task<ApiResponse> GetPlanId(string tenantId)
         {
             TenantSubscription tenantSubscription = null;
             try
@@ -91,14 +91,41 @@ namespace Ranger.Services.Subscriptions
             return new ApiResponse("Successfully retrieved plan id", tenantSubscription.PlanId);
         }
 
+
+        ///<summary>
+        /// Determines whether a subscription is active
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("/subscriptions/{tenantId}/active")]
+        public async Task<ApiResponse> IsSubscriptionActive(string tenantId)
+        {
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                if (tenantSubscription is null)
+                {
+                    throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve subscription for tenant id '{tenantId}'");
+                throw new ApiException("Failed to determine whether subscription is active", StatusCodes.Status500InternalServerError);
+            }
+            return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.PlanId);
+        }
+
         ///<summary>
         /// Gets the requested tenant's subscription limits
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpGet("/subscriptions/{tenantId}/limit-details")]
-        public async Task<ApiResponse> GetLimitDetails(string tenantId)
+        [HttpGet("/subscriptions/{tenantId}")]
+        public async Task<ApiResponse> GetSubscription(string tenantId)
         {
             TenantSubscription tenantSubscription = null;
             LimitFields limit = null;
@@ -121,7 +148,33 @@ namespace Ranger.Services.Subscriptions
                 logger.LogError(ex, $"Failed to determine limit details ");
                 throw new ApiException("Failed to determine limit details ", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Successfully retrieved subscription limit details", new SubscriptionLimitDetails { PlanId = tenantSubscription.PlanId, Limit = limit, Utilized = utilized });
+            return new ApiResponse("Successfully retrieved subscription", new SubscriptionLimitDetails { PlanId = tenantSubscription.PlanId, Limit = limit, Utilized = utilized, Active = tenantSubscription.Active, ScheduledCancellationDate = tenantSubscription.ScheduledCancellationDate });
+        }
+
+        ///<summary>
+        /// Gets the requested tenant id for a subscription id
+        ///</summary>
+        ///<param name="subscriptionId">The subscriptions unique identifier</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("/subscriptions/{subscriptionId}/tenant-id")]
+        public async Task<ApiResponse> GetTenantId(string subscriptionId)
+        {
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionBySubscriptionId(subscriptionId);
+                if (tenantSubscription is null)
+                {
+                    throw new ApiException("No subscription was found for the provided subscription", StatusCodes.Status404NotFound);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve tenant id for subscription '{subscriptionId}'");
+                throw new ApiException("Failed to retrieve tenant id for subscription", StatusCodes.Status500InternalServerError);
+            }
+            return new ApiResponse("Successfully retrieved tenant id", tenantSubscription.TenantId);
         }
     }
 }
