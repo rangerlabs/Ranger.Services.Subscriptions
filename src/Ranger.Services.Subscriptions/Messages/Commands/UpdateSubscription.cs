@@ -6,7 +6,7 @@ namespace Ranger.Services.Subscriptions
     [MessageNamespace("subscriptions")]
     public class UpdateSubscription : ICommand
     {
-        public UpdateSubscription(string tenantId, string subscriptionId, string planId, bool active, DateTime? scheduledCancellationDate)
+        public UpdateSubscription(string tenantId, string subscriptionId, string planId, DateTime occurredAt, bool active = true, DateTime? scheduledCancellationDate = null)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -24,13 +24,14 @@ namespace Ranger.Services.Subscriptions
             this.TenantId = tenantId;
             this.SubscriptionId = subscriptionId;
             this.PlanId = planId;
+            this.OccurredAt = occurredAt;
             this.Active = active;
             this.ScheduledCancellationDate = scheduledCancellationDate;
-
         }
         public string TenantId { get; }
         public string SubscriptionId { get; }
         public string PlanId { get; }
+        public DateTime OccurredAt { get; }
         public bool Active { get; }
         public DateTime? ScheduledCancellationDate { get; }
     }

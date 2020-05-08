@@ -1,5 +1,7 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Ranger.Common;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 using Ranger.Services.Subscriptions.Messages.Events;
@@ -22,8 +24,31 @@ namespace Ranger.Services.Subscriptions.Handlers
         public async Task HandleAsync(UpdateSubscription message, ICorrelationContext context)
         {
             logger.LogInformation($"Updating subscription for tenant {message.TenantId}");
-            await repo.UpdateTenantSubscriptionByTenantId(message.TenantId, new TenantSubscription { PlanId = message.PlanId, Active = message.Active });
-            busPublisher.Publish(new SubscriptionUpdated(), context);
+
+            var subscription = await repo.GetTenantSubscriptionByTenantId(message.TenantId);
+            if (subscription is null)
+            {
+                throw new Exception("No tenant found for the provided tenant id");
+            }
+            if (subscription.PlanId == message.PlanId && subscription.Active == message.Active && subscription.ScheduledCancellationDate == message.ScheduledCancellationDate)
+            {
+                logger.LogDebug("The requested tenant subscription was equal to the existing tenant subscription and was likely a duplicate webhook event. Aborting update");
+                return;
+            }
+            if (message.OccurredAt <= subscription.OccurredAt)
+            {
+                logger.LogDebug("The requested tenant subscription occurred before the existing tenant subscription. Aborting update");
+                return;
+            }
+
+            var planLimits = await ChargeBeeService.GetSubscriptLimitDetailsAsync(message.PlanId);
+            subscription.OccurredAt = message.OccurredAt;
+            subscription.PlanId = message.PlanId;
+            subscription.Active = message.Active;
+            subscription.ScheduledCancellationDate = message.ScheduledCancellationDate;
+            subscription.PlanLimits = planLimits;
+            await repo.UpdateTenantSubscriptionByTenantId(message.TenantId, subscription);
+            busPublisher.Publish(new SubscriptionUpdated(message.TenantId), context);
         }
     }
 }

@@ -66,6 +66,39 @@ namespace Ranger.Services.Subscriptions
         }
 
         ///<summary>
+        /// Gets the Portal Session for the tenant's portal page based on their current subscription
+        ///</summary>
+        ///<param name="tenantId">The tenant's unique identifier</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("/subscriptions/{tenantId}/portal-session")]
+        public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId)
+        {
+            TenantSubscription tenantSubscription = null;
+            try
+            {
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                if (tenantSubscription is null)
+                {
+                    throw new ApiException("No subscription was found for the provided customer id", StatusCodes.Status404NotFound);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to get the tenant subscription");
+                throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
+            }
+
+            var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId);
+            if (portalSession is null)
+            {
+                logger.LogError($"Failed to get the portal session from ChargeBee for customer id '{tenantSubscription.CustomerId}'");
+                throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
+            }
+            return new ApiResponse("Successfully retrieved portal session", portalSession);
+        }
+
+        ///<summary>
         /// Gets the ChargeBee plan id for the requested tenant
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
@@ -128,8 +161,8 @@ namespace Ranger.Services.Subscriptions
         public async Task<ApiResponse> GetSubscription(string tenantId)
         {
             TenantSubscription tenantSubscription = null;
-            LimitFields limit = null;
-            LimitFields utilized = null;
+            PlanLimits limit = null;
+            PlanLimits utilized = null;
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
@@ -140,7 +173,7 @@ namespace Ranger.Services.Subscriptions
             }
             try
             {
-                limit = await ChargeBeeService.GetSubscriptLimitDetailsAsync(tenantSubscription.PlanId);
+                limit = tenantSubscription.PlanLimits;
                 utilized = await subscriptionsService.GetUtilizedLimitFields(tenantId);
             }
             catch (Exception ex)

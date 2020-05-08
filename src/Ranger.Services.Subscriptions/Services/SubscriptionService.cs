@@ -34,13 +34,13 @@ namespace Ranger.Services.Subscriptions
             this.subscriptionsRepository = subscriptionsRepository;
         }
 
-        public async Task<LimitFields> GetUtilizedLimitFields(string tenantId)
+        public async Task<PlanLimits> GetUtilizedLimitFields(string tenantId)
         {
             var geofenceCount = await geofencesHttpClient.GetAllActiveGeofencesCount(tenantId);
             var integrationCount = await integrationsHttpClient.GetAllActiveIntegrationsCount(tenantId);
             var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
             var userCount = await identityHttpClient.GetAllUsersAsync<IEnumerable<User>>(tenantId);
-            return new LimitFields
+            return new PlanLimits
             {
                 Geofences = (int)geofenceCount.Result,
                 Integrations = integrationCount.Result,

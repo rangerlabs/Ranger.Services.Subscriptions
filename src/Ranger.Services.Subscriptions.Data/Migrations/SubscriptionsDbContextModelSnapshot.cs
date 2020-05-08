@@ -41,6 +41,44 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                     b.ToTable("data_protection_keys");
                 });
 
+            modelBuilder.Entity("Ranger.Services.Subscriptions.Data.PlanLimits", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int>("Accounts")
+                        .HasColumnName("accounts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Geofences")
+                        .HasColumnName("geofences")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Integrations")
+                        .HasColumnName("integrations")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Projects")
+                        .HasColumnName("projects")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantSubscriptionId")
+                        .HasColumnName("tenant_subscription_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plan_limits");
+
+                    b.HasIndex("TenantSubscriptionId")
+                        .IsUnique()
+                        .HasName("ix_plan_limits_tenant_subscription_id");
+
+                    b.ToTable("plan_limits");
+                });
+
             modelBuilder.Entity("Ranger.Services.Subscriptions.Data.TenantSubscription", b =>
                 {
                     b.Property<int>("Id")
@@ -53,12 +91,21 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .HasColumnName("active")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnName("customer_id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnName("occurred_at")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("PlanId")
                         .IsRequired()
                         .HasColumnName("plan_id")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("ScheduledCancellationDate")
+                    b.Property<DateTime?>("ScheduledCancellationDate")
                         .HasColumnName("scheduled_cancellation_date")
                         .HasColumnType("timestamp without time zone");
 
@@ -75,6 +122,9 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_tenant_subscriptions");
 
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
                     b.HasIndex("SubscriptionId")
                         .IsUnique();
 
@@ -82,6 +132,16 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("tenant_subscriptions");
+                });
+
+            modelBuilder.Entity("Ranger.Services.Subscriptions.Data.PlanLimits", b =>
+                {
+                    b.HasOne("Ranger.Services.Subscriptions.Data.TenantSubscription", "TenantSubscription")
+                        .WithOne("PlanLimits")
+                        .HasForeignKey("Ranger.Services.Subscriptions.Data.PlanLimits", "TenantSubscriptionId")
+                        .HasConstraintName("fk_plan_limits_tenant_subscriptions_tenant_subscription_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

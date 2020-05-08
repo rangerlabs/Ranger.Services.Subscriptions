@@ -34,6 +34,7 @@ namespace Ranger.Services.Subscriptions
                         message.FirstName,
                         message.LastName
                     );
+                subscription.PlanLimits = await ChargeBeeService.GetSubscriptLimitDetailsAsync("sandbox");
             }
             catch (Exception ex)
             {

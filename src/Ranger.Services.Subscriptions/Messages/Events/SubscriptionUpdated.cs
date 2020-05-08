@@ -5,7 +5,11 @@ namespace Ranger.Services.Subscriptions.Messages.Events
     [MessageNamespace("subscriptions")]
     public class SubscriptionUpdated : IEvent
     {
-        public SubscriptionUpdated()
-        { }
+        public string TenantId { get; }
+
+        public SubscriptionUpdated(string tenantId)
+        {
+            this.TenantId = tenantId;
+        }
     }
 }

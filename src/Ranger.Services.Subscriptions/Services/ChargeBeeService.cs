@@ -10,19 +10,29 @@ namespace Ranger.Services.Subscriptions
 {
     public static class ChargeBeeService
     {
-        public static async Task<LimitFields> GetSubscriptLimitDetailsAsync(string planId)
+        public static async Task<PlanLimits> GetSubscriptLimitDetailsAsync(string planId)
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
                 throw new ArgumentException($"{nameof(planId)} was null or whitespace");
             }
-
             var entityResult = await Plan.Retrieve(planId).RequestAsync();
-            return entityResult.Plan.MetaData.ToObject<LimitFields>(
+            return entityResult.Plan.MetaData.ToObject<PlanLimits>(
                 new JsonSerializer
                 {
                     MissingMemberHandling = MissingMemberHandling.Error
                 });
+        }
+
+        public static async Task<Subscription> GetSubscriptionAsync(string tenantId)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            }
+            var entityResult = await Customer.Retrieve(tenantId).RequestAsync();
+            var subscription = await Subscription.Retrieve(entityResult.Subscription.Id).RequestAsync();
+            return entityResult.Subscription;
         }
 
         public static async Task<IEnumerable<RangerPlan>> GetAllSubscriptionLimitDetailsAsync()
@@ -31,7 +41,7 @@ namespace Ranger.Services.Subscriptions
             var plans = new List<RangerPlan>();
             foreach (var item in listResult.List)
             {
-                plans.Add(new RangerPlan(item.Plan.Id, item.Plan.MetaData.ToObject<LimitFields>(new JsonSerializer { MissingMemberHandling = MissingMemberHandling.Error })));
+                plans.Add(new RangerPlan(item.Plan.Id, item.Plan.MetaData.ToObject<PlanLimits>(new JsonSerializer { MissingMemberHandling = MissingMemberHandling.Error })));
             }
             return plans;
         }
@@ -53,6 +63,17 @@ namespace Ranger.Services.Subscriptions
                                 .RequestAsync();
 
             return entityResult?.HostedPage;
+        }
+
+        public static async Task<PortalSession> GetPortalSessionAsync(string customerId)
+        {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                throw new ArgumentException($"{nameof(customerId)} was null or whitespace");
+            }
+            var entityResult = await PortalSession.Create()
+                                .CustomerId(customerId).RequestAsync();
+            return entityResult?.PortalSession;
         }
 
         public static async Task<TenantSubscription> CreateNewTenantSubscription(string tenantId, string organizationName, string email, string firstName, string lastName)
@@ -91,6 +112,7 @@ namespace Ranger.Services.Subscriptions
             return new TenantSubscription
             {
                 SubscriptionId = entityResult.Subscription.Id,
+                CustomerId = entityResult.Customer.Id,
                 PlanId = "sandbox",
                 TenantId = tenantId,
                 Active = true
