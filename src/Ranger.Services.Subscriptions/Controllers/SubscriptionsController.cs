@@ -45,6 +45,10 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                if (!tenantSubscription.Active)
+                {
+                    throw new ApiException("Cannot modify an inactive subscription", StatusCodes.Status400BadRequest);
+                }
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
