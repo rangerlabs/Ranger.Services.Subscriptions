@@ -15,6 +15,7 @@ using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
+using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 
@@ -77,6 +78,11 @@ namespace Ranger.Services.Subscriptions
                 .PersistKeysToDbContext<SubscriptionsDbContext>();
 
             services.AddTransient<SubscriptionsRepository>();
+
+            services.AddLiveHealthCheck();
+            services.AddEntityFrameworkHealthCheck<SubscriptionsDbContext>();
+            services.AddDockerImageTagHealthCheck();
+            services.AddRabbitMQHealthCheck();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -103,6 +109,11 @@ namespace Ranger.Services.Subscriptions
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks();
+                endpoints.MapLiveTagHealthCheck();
+                endpoints.MapEfCoreTagHealthCheck();
+                endpoints.MapDockerImageTagHealthCheck();
+                endpoints.MapRabbitMQHealthCheck();
             });
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e)
