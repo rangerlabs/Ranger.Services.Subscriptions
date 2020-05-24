@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Ranger.Services.Subscriptions.Data.Migrations
@@ -27,9 +28,13 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    pgsql_database_username = table.Column<string>(nullable: false),
+                    tenant_id = table.Column<string>(nullable: false),
                     subscription_id = table.Column<string>(nullable: false),
-                    plan_id = table.Column<string>(nullable: false)
+                    customer_id = table.Column<string>(nullable: false),
+                    plan_id = table.Column<string>(nullable: false),
+                    active = table.Column<bool>(nullable: false),
+                    scheduled_cancellation_date = table.Column<DateTime>(nullable: true),
+                    occurred_at = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -37,22 +42,22 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "utilization_details",
+                name: "plan_limits",
                 columns: table => new
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     tenant_subscription_id = table.Column<int>(nullable: false),
-                    geofence_count = table.Column<int>(nullable: false),
-                    project_count = table.Column<int>(nullable: false),
-                    integration_count = table.Column<int>(nullable: false),
-                    account_count = table.Column<int>(nullable: false)
+                    geofences = table.Column<int>(nullable: false),
+                    integrations = table.Column<int>(nullable: false),
+                    projects = table.Column<int>(nullable: false),
+                    accounts = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_utilization_details", x => x.id);
+                    table.PrimaryKey("pk_plan_limits", x => x.id);
                     table.ForeignKey(
-                        name: "fk_utilization_details_tenant_subscriptions_tenant_subscriptio~",
+                        name: "fk_plan_limits_tenant_subscriptions_tenant_subscription_id",
                         column: x => x.tenant_subscription_id,
                         principalTable: "tenant_subscriptions",
                         principalColumn: "id",
@@ -60,9 +65,15 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_tenant_subscriptions_pgsql_database_username",
+                name: "ix_plan_limits_tenant_subscription_id",
+                table: "plan_limits",
+                column: "tenant_subscription_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tenant_subscriptions_customer_id",
                 table: "tenant_subscriptions",
-                column: "pgsql_database_username",
+                column: "customer_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -72,9 +83,9 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_utilization_details_tenant_subscription_id",
-                table: "utilization_details",
-                column: "tenant_subscription_id",
+                name: "IX_tenant_subscriptions_tenant_id",
+                table: "tenant_subscriptions",
+                column: "tenant_id",
                 unique: true);
         }
 
@@ -84,7 +95,7 @@ namespace Ranger.Services.Subscriptions.Data.Migrations
                 name: "data_protection_keys");
 
             migrationBuilder.DropTable(
-                name: "utilization_details");
+                name: "plan_limits");
 
             migrationBuilder.DropTable(
                 name: "tenant_subscriptions");

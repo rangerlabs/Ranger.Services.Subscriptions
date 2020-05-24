@@ -5,14 +5,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
+using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 
@@ -42,19 +45,16 @@ namespace Ranger.Services.Subscriptions
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Subscriptions API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("subscriptionApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("subscriptionApi");
-                    });
-            });
-
-            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
-            {
-                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
-            });
+            services.AddPollyPolicyRegistry();
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
+            services.AddIdentityHttpClient("http://identity:5000", "IdentityServerApi", "89pCcXHuDYTXY");
+            services.AddGeofencesHttpClient("http://geofences:8085", "geofencesApi", "9pwJgpgpu6PNJi");
+            services.AddIntegrationsHttpClient("http://integrations:8087", "integrationsApi", "6HyhzSoSHvxTG");
 
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
@@ -70,7 +70,6 @@ namespace Ranger.Services.Subscriptions
                 {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "subscriptionsApi";
-
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -79,11 +78,17 @@ namespace Ranger.Services.Subscriptions
                 .PersistKeysToDbContext<SubscriptionsDbContext>();
 
             services.AddTransient<SubscriptionsRepository>();
+
+            services.AddLiveHealthCheck();
+            services.AddEntityFrameworkHealthCheck<SubscriptionsDbContext>();
+            services.AddDockerImageTagHealthCheck();
+            services.AddRabbitMQHealthCheck();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterInstance<ChargeBeeOptions>(configuration.GetOptions<ChargeBeeOptions>("chargeBee"));
+            builder.RegisterType<SubscriptionsService>();
             builder.AddRabbitMq();
         }
 
@@ -93,18 +98,29 @@ namespace Ranger.Services.Subscriptions
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
             ApiConfig.Configure(configuration.GetOptions<ChargeBeeOptions>("chargeBee").Site, configuration.GetOptions<ChargeBeeOptions>("chargeBee").ApiKey);
 
+            app.UseSwagger("v1", "Subscriptions API");
+            app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks();
+                endpoints.MapLiveTagHealthCheck();
+                endpoints.MapEfCoreTagHealthCheck();
+                endpoints.MapDockerImageTagHealthCheck();
+                endpoints.MapRabbitMQHealthCheck();
             });
             this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<CreateNewTenantSubscription>()
-                .SubscribeCommand<IncrementResourceCount>((c, e) =>
-                    new IncrementResourceCountRejected(e.Message, ""))
-                .SubscribeCommand<DecrementResourceCount>((c, e) =>
-                    new DecrementResourceCountRejected(e.Message, ""));
+                .SubscribeCommand<CreateNewTenantSubscription>((c, e)
+                    => new NewTenantSubscriptionRejected(e.Message, "")
+                )
+                .SubscribeCommand<UpdateSubscription>()
+                .SubscribeCommand<ComputeTenantLimitDetails>();
         }
 
         private void OnShutdown()

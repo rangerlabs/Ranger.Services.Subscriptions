@@ -2,14 +2,14 @@ using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Subscriptions
 {
-    public class DecrementResourceCountRejected : IRejectedEvent
+    [MessageNamespace("subscriptions")]
+    public class UpdateSubscriptionRejected : IRejectedEvent
     {
-        public DecrementResourceCountRejected(string reason, string code)
+        public UpdateSubscriptionRejected(string reason, string code)
         {
             this.Reason = reason;
             this.Code = code;
         }
-
         public string Reason { get; }
         public string Code { get; }
     }

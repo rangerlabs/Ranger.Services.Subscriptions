@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
 
@@ -18,7 +16,7 @@ namespace Ranger.Services.Subscriptions.Data
 
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<TenantSubscription> TenantSubscriptions { get; set; }
-        public DbSet<UtilizationDetails> UtilizationDetails { get; set; }
+        public DbSet<PlanLimits> PlanLimits { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,14 +59,14 @@ namespace Ranger.Services.Subscriptions.Data
                 encryptionHelper?.SetEncrytedPropertyAccessMode(entity);
             }
 
-            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.PgsqlDatabaseUsername).IsUnique();
+            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.TenantId).IsUnique();
             modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.SubscriptionId).IsUnique();
-            modelBuilder.Entity<TenantSubscription>(entity =>
-            {
-                entity.HasOne(_ => _.UtilizationDetails)
-                    .WithOne(_ => _.TenantSubscription)
-                    .HasForeignKey<UtilizationDetails>(_ => _.TenantSubscriptionId);
-            });
+            modelBuilder.Entity<TenantSubscription>().HasIndex(ts => ts.CustomerId).IsUnique();
+            modelBuilder.Entity<TenantSubscription>()
+                .HasOne(s => s.PlanLimits)
+                .WithOne(p => p.TenantSubscription)
+                .HasForeignKey<PlanLimits>(p => p.TenantSubscriptionId)
+                .IsRequired();
         }
     }
 }

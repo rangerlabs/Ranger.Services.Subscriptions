@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ranger.Common;
 
 namespace Ranger.Services.Subscriptions.Data
 {
@@ -24,36 +26,76 @@ namespace Ranger.Services.Subscriptions.Data
                 throw new ArgumentNullException(nameof(subscription));
             }
 
+            subscription.OccurredAt = DateTime.UtcNow;
             context.TenantSubscriptions.Add(subscription);
             await context.SaveChangesAsync();
 
         }
 
-        public async Task UpdateTenantSubscriptionByPgsqlDatabaseUsername(string pgsqlDatabaseUsername, TenantSubscription tenantSubscription)
+        public async Task<int> UpdateTenantSubscriptionByTenantId(string tenantId, TenantSubscription tenantSubscription)
         {
-            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var existing = await context.TenantSubscriptions.Where(_ => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername).SingleAsync();
-            existing.UtilizationDetails = tenantSubscription.UtilizationDetails;
-            existing.PlanId = tenantSubscription.PlanId;
-            context.Update(existing);
-            await context.SaveChangesAsync();
+            context.Update(tenantSubscription);
+            return await context.SaveChangesAsync();
         }
 
-        public async Task<TenantSubscription> GetTenantSubscriptionByPgsqlDatabaseUsername(string pgsqlDatabaseUsername)
+        public async Task<TenantSubscription> GetTenantSubscriptionByTenantId(string tenantId)
         {
-            if (String.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            if (String.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            return await context.TenantSubscriptions
-                            .Where(_ => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername)
-                            .Include(_ => _.UtilizationDetails)
-                            .SingleAsync();
+            var result = await context.TenantSubscriptions
+                .Where(_ => _.TenantId == tenantId)
+                .Include(_ => _.PlanLimits)
+                .SingleOrDefaultAsync();
+            return result;
+        }
+
+        public async Task<TenantSubscription> GetTenantSubscriptionByCustomerId(string customerId)
+        {
+            if (String.IsNullOrWhiteSpace(customerId))
+            {
+                throw new ArgumentException($"{nameof(customerId)} was null or whitespace");
+            }
+
+            var result = await context.TenantSubscriptions
+                .Where(_ => _.CustomerId == customerId)
+                .Include(_ => _.PlanLimits)
+                .SingleOrDefaultAsync();
+            if (result is null)
+            {
+                throw new RangerException("No tenant found for the provided customer id");
+            }
+            return result;
+        }
+
+        public async Task<TenantSubscription> GetTenantSubscriptionBySubscriptionId(string subscriptionId)
+        {
+            if (String.IsNullOrWhiteSpace(subscriptionId))
+            {
+                throw new ArgumentException($"{nameof(subscriptionId)} was null or whitespace");
+            }
+
+            var result = await context.TenantSubscriptions
+                .Where(_ => _.SubscriptionId == subscriptionId)
+                .Include(_ => _.PlanLimits)
+                .SingleOrDefaultAsync();
+            if (result is null)
+            {
+                throw new RangerException("No tenant found for the provided subscription id");
+            }
+            return result;
+        }
+
+        public async Task<IEnumerable<TenantSubscription>> GetAllTenantSubscriptions()
+        {
+            return await context.TenantSubscriptions.ToListAsync();
         }
     }
 }

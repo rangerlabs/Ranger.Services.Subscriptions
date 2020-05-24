@@ -1,22 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ranger.Services.Subscriptions.Data
 {
-    public class UtilizationDetails
+    public class PlanLimits
     {
-        [Key]
         public int Id { get; set; }
-        [Required]
         public int TenantSubscriptionId { get; set; }
-        [Required]
         public TenantSubscription TenantSubscription { get; set; }
         [Required]
-        public int GeofenceCount { get; set; }
+        public int Geofences { get; set; }
         [Required]
-        public int ProjectCount { get; set; }
+        public int Integrations { get; set; }
         [Required]
-        public int IntegrationCount { get; set; }
+        public int Projects { get; set; }
         [Required]
-        public int AccountCount { get; set; }
+        public int Accounts { get; set; }
     }
 }
