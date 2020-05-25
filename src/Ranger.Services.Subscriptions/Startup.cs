@@ -77,7 +77,9 @@ namespace Ranger.Services.Subscriptions
                 });
 
             services.AddDataProtection()
+                .SetApplicationName("Subscriptions")
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<SubscriptionsDbContext>();
 
             services.AddTransient<SubscriptionsRepository>();
