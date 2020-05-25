@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Common;
+using Ranger.Common.Config;
 using Ranger.InternalHttpClient;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
@@ -45,16 +46,18 @@ namespace Ranger.Services.Subscriptions
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+
+            var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddAutoWrapper();
             services.AddSwaggerGen("Subscriptions API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
             services.AddPollyPolicyRegistry();
-            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
-            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
-            services.AddIdentityHttpClient("http://identity:5000", "IdentityServerApi", "89pCcXHuDYTXY");
-            services.AddGeofencesHttpClient("http://geofences:8085", "geofencesApi", "9pwJgpgpu6PNJi");
-            services.AddIntegrationsHttpClient("http://integrations:8087", "integrationsApi", "6HyhzSoSHvxTG");
+            services.AddTenantsHttpClient("http://tenants:8082", identityAuthority, "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", identityAuthority, "projectsApi", "usGwT8Qsp4La2");
+            services.AddIdentityHttpClient("http://identity:5000", identityAuthority, "IdentityServerApi", "89pCcXHuDYTXY");
+            services.AddGeofencesHttpClient("http://geofences:8085", identityAuthority, "geofencesApi", "9pwJgpgpu6PNJi");
+            services.AddIntegrationsHttpClient("http://integrations:8087", identityAuthority, "integrationsApi", "6HyhzSoSHvxTG");
 
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
