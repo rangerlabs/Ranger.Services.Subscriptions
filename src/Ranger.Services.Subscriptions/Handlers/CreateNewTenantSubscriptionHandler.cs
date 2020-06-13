@@ -38,8 +38,8 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogCritical(ex, $"Failed to create the new sandbox subscription for tenant with domain {message.TenantId}");
-                throw;
+                logger.LogError(ex, $"Failed to create the new sandbox subscription for tenant with domain {message.TenantId}");
+                throw new RangerException("An unexpected error occurred creating the subscription");
             }
 
             try
@@ -48,9 +48,10 @@ namespace Ranger.Services.Subscriptions
             }
             catch (Exception ex)
             {
-                logger.LogCritical(ex, $"Failed to persist the newly created subscription for tenant with domain {message.TenantId}");
-                throw;
+                logger.LogError(ex, $"Failed to persist the newly created subscription for tenant with domain {message.TenantId}");
+                throw new RangerException("An unexpected error occurred creating the subscription");
             }
+
             busPublisher.Publish(new NewTenantSubscriptionCreated(), context);
         }
     }
