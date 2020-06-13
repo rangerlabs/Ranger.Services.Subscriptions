@@ -118,5 +118,20 @@ namespace Ranger.Services.Subscriptions
                 Active = true
             };
         }
+
+        public static async Task UpdateChargebeeCustomerOrganization(string customerId, string organizationName)
+        {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                throw new ArgumentException($"'{nameof(customerId)}' cannot be null or whitespace", nameof(customerId));
+            }
+
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                throw new ArgumentException($"'{nameof(organizationName)}' cannot be null or whitespace", nameof(organizationName));
+            }
+
+            await Customer.Update(customerId).Company(organizationName).RequestAsync();
+        }
     }
 }

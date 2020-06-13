@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Ranger.Common;
 using Ranger.RabbitMQ;
 using Ranger.Services.Subscriptions.Data;
 

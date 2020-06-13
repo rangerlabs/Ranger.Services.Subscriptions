@@ -18,6 +18,8 @@ using Ranger.Common.Config;
 using Ranger.InternalHttpClient;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
+using Ranger.Services.Operations.Messages.Subscriptions.Commands;
+using Ranger.Services.Operations.Messages.Subscriptions.RejectedEvents;
 using Ranger.Services.Subscriptions.Data;
 
 namespace Ranger.Services.Subscriptions
@@ -121,9 +123,10 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapRabbitMQHealthCheck();
             });
             this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<CreateNewTenantSubscription>((c, e)
-                    => new NewTenantSubscriptionRejected(e.Message, "")
-                )
+                .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
+                    new NewTenantSubscriptionRejected(e.Message, "")
+                ).SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
+                    new UpdateTenantSubscriptionOrganizationRejected(e.Message, ""))
                 .SubscribeCommand<UpdateSubscription>()
                 .SubscribeCommand<ComputeTenantLimitDetails>();
         }
