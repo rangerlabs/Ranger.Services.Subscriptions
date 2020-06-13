@@ -11,11 +11,11 @@ namespace Ranger.Services.Subscriptions.Handlers
 {
     public class UpdateTenantSubscriptionOrganizationHandler : ICommandHandler<UpdateTenantSubscriptionOrganization>
     {
-        private readonly BusPublisher busPublisher;
+        private readonly IBusPublisher busPublisher;
         private readonly SubscriptionsRepository subscriptionsRepository;
         private readonly ILogger<UpdateTenantSubscriptionOrganizationHandler> logger;
 
-        public UpdateTenantSubscriptionOrganizationHandler(BusPublisher busPublisher, SubscriptionsRepository subscriptionsRepository, ILogger<UpdateTenantSubscriptionOrganizationHandler> logger)
+        public UpdateTenantSubscriptionOrganizationHandler(IBusPublisher busPublisher, SubscriptionsRepository subscriptionsRepository, ILogger<UpdateTenantSubscriptionOrganizationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.subscriptionsRepository = subscriptionsRepository;
