@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Autofac;
 using ChargeBee.Api;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Common;
-using Ranger.Common.Config;
 using Ranger.InternalHttpClient;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
@@ -124,9 +122,11 @@ namespace Ranger.Services.Subscriptions
             });
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
-                    new NewTenantSubscriptionRejected(e.Message, "")
-                ).SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
+                    new NewTenantSubscriptionRejected(e.Message, ""))
+                .SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
                     new UpdateTenantSubscriptionOrganizationRejected(e.Message, ""))
+                .SubscribeCommand<CancelTenantSubscription>((c, e) =>
+                    new CancelTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateSubscription>()
                 .SubscribeCommand<ComputeTenantLimitDetails>();
         }

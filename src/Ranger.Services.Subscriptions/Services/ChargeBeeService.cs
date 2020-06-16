@@ -133,5 +133,15 @@ namespace Ranger.Services.Subscriptions
 
             await Customer.Update(customerId).Company(organizationName).RequestAsync();
         }
+
+        public static async Task CancelChargeBeeSubscription(string subscriptionId)
+        {
+            if (string.IsNullOrWhiteSpace(subscriptionId))
+            {
+                throw new ArgumentException($"'{nameof(subscriptionId)}' cannot be null or whitespace", nameof(subscriptionId));
+            }
+
+            await Subscription.Cancel(subscriptionId).RequestAsync();
+        }
     }
 }
