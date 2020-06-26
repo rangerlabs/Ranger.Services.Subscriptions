@@ -60,6 +60,7 @@ namespace Ranger.Services.Subscriptions
                 throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
 
+            logger.LogInformation("Retrieving hosted page url for {SubscriptionId} and {PlanId}", tenantSubscription.SubscriptionId, planId);
             var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
             if (hostedPageUrl is null)
             {
@@ -76,7 +77,7 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/portal-session")]
-        public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId)
+        public async Task<ApiResponse> GetPortalSession(string tenantId)
         {
             TenantSubscription tenantSubscription = null;
             try
@@ -93,6 +94,7 @@ namespace Ranger.Services.Subscriptions
                 throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
             }
 
+            logger.LogInformation("Retrieving portal session for {CustomerId}", tenantSubscription.CustomerId);
             var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId);
             if (portalSession is null)
             {
