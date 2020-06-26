@@ -60,14 +60,22 @@ namespace Ranger.Services.Subscriptions
                 throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
             }
 
-            logger.LogInformation("Retrieving hosted page url for {SubscriptionId} and {PlanId}", tenantSubscription.SubscriptionId, planId);
-            var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
-            if (hostedPageUrl is null)
+            try
             {
-                logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'");
-                throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
+                logger.LogInformation("Retrieving hosted page url for {SubscriptionId} and {PlanId}", tenantSubscription.SubscriptionId, planId);
+                var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
+                if (hostedPageUrl is null)
+                {
+                    logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'");
+                    throw new ApiException("Failed to get the checkout hosted page url", StatusCodes.Status500InternalServerError);
+                }
+                return new ApiResponse("Successfully retrieved checkout hosted page url", hostedPageUrl);
             }
-            return new ApiResponse("Successfully retrieved checkout hosted page url", hostedPageUrl);
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to retrieve hosted page url for {SubscriptionId} and {PlanId}", tenantSubscription.SubscriptionId, planId);
+                throw new ApiException("Failed to retrieve hosted page url from Chargebee", StatusCodes.Status500InternalServerError);
+            }
         }
 
         ///<summary>
@@ -94,14 +102,22 @@ namespace Ranger.Services.Subscriptions
                 throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
             }
 
-            logger.LogInformation("Retrieving portal session for {CustomerId}", tenantSubscription.CustomerId);
-            var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId);
-            if (portalSession is null)
+            try
             {
-                logger.LogError($"Failed to get the portal session from ChargeBee for customer id '{tenantSubscription.CustomerId}'");
-                throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
+                logger.LogInformation("Retrieving portal session for {CustomerId}", tenantSubscription.CustomerId);
+                var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId);
+                if (portalSession is null)
+                {
+                    logger.LogError($"Failed to get the portal session from ChargeBee for customer id '{tenantSubscription.CustomerId}'");
+                    throw new ApiException("Failed to get the portal session", StatusCodes.Status500InternalServerError);
+                }
+                return new ApiResponse("Successfully retrieved portal session", portalSession);
             }
-            return new ApiResponse("Successfully retrieved portal session", portalSession);
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to retrieve portal session for {CustomerId}", tenantSubscription.CustomerId);
+                throw new ApiException("Failed to retrieve portal session from Chargebee", StatusCodes.Status500InternalServerError);
+            }
         }
 
         ///<summary>
