@@ -23,18 +23,20 @@ namespace Ranger.Services.Subscriptions.Handlers
 
         public async Task HandleAsync(UpdateSubscription message, ICorrelationContext context)
         {
-            logger.LogInformation($"Updating subscription for tenant {message.TenantId}");
+            logger.LogInformation("Updating subscription for tenant with subscription Id {SubscriptionId}", message.SubscriptionId);
 
-            var subscription = await repo.GetTenantSubscriptionByTenantId(message.TenantId);
+            var subscription = await repo.GetTenantSubscriptionBySubscriptionId(message.SubscriptionId);
             if (subscription is null)
             {
                 throw new Exception("No tenant found for the provided tenant id");
             }
+
             if (subscription.PlanId == message.PlanId && subscription.Active == message.Active && subscription.ScheduledCancellationDate == message.ScheduledCancellationDate)
             {
                 logger.LogDebug("The requested tenant subscription was equal to the existing tenant subscription and was likely a duplicate webhook event. Aborting update");
                 return;
             }
+
             if (message.OccurredAt <= subscription.OccurredAt)
             {
                 logger.LogDebug("The requested tenant subscription occurred before the existing tenant subscription. Aborting update");
@@ -47,8 +49,8 @@ namespace Ranger.Services.Subscriptions.Handlers
             subscription.Active = message.Active;
             subscription.ScheduledCancellationDate = message.ScheduledCancellationDate;
             subscription.PlanLimits = planLimits;
-            await repo.UpdateTenantSubscriptionByTenantId(message.TenantId, subscription);
-            busPublisher.Publish(new SubscriptionUpdated(message.TenantId), context);
+            await repo.UpdateTenantSubscriptionByTenantId(subscription.TenantId, subscription);
+            busPublisher.Publish(new SubscriptionUpdated(subscription.TenantId), context);
         }
     }
 }
