@@ -49,11 +49,12 @@ namespace Ranger.Services.Subscriptions
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            var identityAuthority = configuration["httpClient:identityAuthority"];
-            services.AddAutoWrapper();
-            services.AddSwaggerGen("Subscriptions API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
 
+            services.AddSwaggerGen("Subscriptions API", "v1");
+
+            var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
             services.AddTenantsHttpClient("http://tenants:8082", identityAuthority, "tenantsApi", "cKprgh9wYKWcsm");
             services.AddProjectsHttpClient("http://projects:8086", identityAuthority, "projectsApi", "usGwT8Qsp4La2");
