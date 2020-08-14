@@ -41,6 +41,7 @@ namespace Ranger.Services.Subscriptions
             services.AddControllers(options =>
                 {
                     options.EnableEndpointRouting = false;
+                    options.Filters.Add<OperationCanceledExceptionFilter>();
                 })
                 .AddNewtonsoftJson(options =>
                 {

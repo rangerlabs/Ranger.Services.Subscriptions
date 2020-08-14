@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Authorization;
@@ -39,12 +40,12 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/{planId}/checkout-existing-hosted-page-url")]
-        public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId, string planId)
+        public async Task<ApiResponse> GetCheckoutExistingHostedPageUrl(string tenantId, string planId, CancellationToken cancellationToken = default(CancellationToken))
         {
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
                 if (!tenantSubscription.Active)
                 {
                     throw new ApiException("Cannot modify an inactive subscription", StatusCodes.Status400BadRequest);
@@ -63,7 +64,7 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 logger.LogInformation("Retrieving hosted page url for {SubscriptionId} and {PlanId}", tenantSubscription.SubscriptionId, planId);
-                var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId);
+                var hostedPageUrl = await ChargeBeeService.GetHostedPageUrl(tenantSubscription.SubscriptionId, planId, cancellationToken);
                 if (hostedPageUrl is null)
                 {
                     logger.LogError($"Failed to get the checkout hosted page url from ChargeBee for subscription id '{tenantSubscription.SubscriptionId}'");
@@ -85,12 +86,12 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/portal-session")]
-        public async Task<ApiResponse> GetPortalSession(string tenantId)
+        public async Task<ApiResponse> GetPortalSession(string tenantId, CancellationToken cancellationToken)
         {
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided customer id", StatusCodes.Status404NotFound);
@@ -105,7 +106,7 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 logger.LogInformation("Retrieving portal session for {CustomerId}", tenantSubscription.CustomerId);
-                var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId);
+                var portalSession = await ChargeBeeService.GetPortalSessionAsync(tenantSubscription.CustomerId, cancellationToken);
                 if (portalSession is null)
                 {
                     logger.LogError($"Failed to get the portal session from ChargeBee for customer id '{tenantSubscription.CustomerId}'");
@@ -127,12 +128,12 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/plan-id")]
-        public async Task<ApiResponse> GetPlanId(string tenantId)
+        public async Task<ApiResponse> GetPlanId(string tenantId, CancellationToken cancellationToken)
         {
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
@@ -154,12 +155,12 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/active")]
-        public async Task<ApiResponse> IsSubscriptionActive(string tenantId)
+        public async Task<ApiResponse> IsSubscriptionActive(string tenantId, CancellationToken cancellationToken)
         {
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
@@ -180,14 +181,14 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}")]
-        public async Task<ApiResponse> GetSubscription(string tenantId)
+        public async Task<ApiResponse> GetSubscription(string tenantId, CancellationToken cancellationToken)
         {
             TenantSubscription tenantSubscription = null;
             PlanLimits limit = null;
             PlanLimits utilized = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
             }
             catch (RangerException ex)
             {
@@ -196,7 +197,7 @@ namespace Ranger.Services.Subscriptions
             try
             {
                 limit = tenantSubscription.PlanLimits;
-                utilized = await subscriptionsService.GetUtilizedLimitFields(tenantId);
+                utilized = await subscriptionsService.GetUtilizedLimitFields(tenantId, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -213,12 +214,12 @@ namespace Ranger.Services.Subscriptions
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{subscriptionId}/tenant-id")]
-        public async Task<ApiResponse> GetTenantId(string subscriptionId)
+        public async Task<ApiResponse> GetTenantId(string subscriptionId, CancellationToken cancellationToken)
         {
             TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionBySubscriptionId(subscriptionId);
+                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionBySubscriptionId(subscriptionId, cancellationToken);
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided subscription", StatusCodes.Status404NotFound);

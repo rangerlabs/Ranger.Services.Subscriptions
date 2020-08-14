@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Ranger.Common;
@@ -34,12 +35,12 @@ namespace Ranger.Services.Subscriptions
             this.subscriptionsRepository = subscriptionsRepository;
         }
 
-        public async Task<PlanLimits> GetUtilizedLimitFields(string tenantId)
+        public async Task<PlanLimits> GetUtilizedLimitFields(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var geofenceCount = await geofencesHttpClient.GetAllActiveGeofencesCount(tenantId);
-            var integrationCount = await integrationsHttpClient.GetAllActiveIntegrationsCount(tenantId);
-            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
-            var userCount = await identityHttpClient.GetAllUsersAsync<IEnumerable<User>>(tenantId);
+            var geofenceCount = await geofencesHttpClient.GetAllActiveGeofencesCount(tenantId, cancellationToken);
+            var integrationCount = await integrationsHttpClient.GetAllActiveIntegrationsCount(tenantId, cancellationToken);
+            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId, cancellationToken);
+            var userCount = await identityHttpClient.GetAllUsersAsync<IEnumerable<User>>(tenantId, cancellationToken);
             return new PlanLimits
             {
                 Geofences = (int)geofenceCount.Result,
