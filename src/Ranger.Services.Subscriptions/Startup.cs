@@ -104,7 +104,6 @@ namespace Ranger.Services.Subscriptions
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
             ApiConfig.Configure(configuration.GetOptions<ChargeBeeOptions>("chargeBee").Site, configuration.GetOptions<ChargeBeeOptions>("chargeBee").ApiKey);
 
             app.UseSwagger("v1", "Subscriptions API");
@@ -124,7 +123,7 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ()
+            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
                     new NewTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
@@ -133,11 +132,6 @@ namespace Ranger.Services.Subscriptions
                     new CancelTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateSubscription>()
                 .SubscribeCommand<ComputeTenantLimitDetails>();
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
     }
 }
