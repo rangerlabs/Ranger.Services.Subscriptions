@@ -37,6 +37,7 @@ namespace Ranger.Services.Subscriptions
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
         ///<param name="planId">The tenant's current ChargeBee plan id</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/{planId}/checkout-existing-hosted-page-url")]
@@ -83,6 +84,7 @@ namespace Ranger.Services.Subscriptions
         /// Gets the Portal Session for the tenant's portal page based on their current subscription
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/portal-session")]
@@ -125,6 +127,7 @@ namespace Ranger.Services.Subscriptions
         /// Gets the ChargeBee plan id for the requested tenant
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/plan-id")]
@@ -152,6 +155,7 @@ namespace Ranger.Services.Subscriptions
         /// Determines whether a subscription is active
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}/active")]
@@ -171,13 +175,14 @@ namespace Ranger.Services.Subscriptions
                 logger.LogError(ex, $"Failed to retrieve subscription for tenant id '{tenantId}'");
                 throw new ApiException("Failed to determine whether subscription is active", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.PlanId);
+            return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active);
         }
 
         ///<summary>
         /// Gets the requested tenant's subscription limits
         ///</summary>
         ///<param name="tenantId">The tenant's unique identifier</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{tenantId}")]
@@ -211,6 +216,7 @@ namespace Ranger.Services.Subscriptions
         /// Gets the requested tenant id for a subscription id
         ///</summary>
         ///<param name="subscriptionId">The subscriptions unique identifier</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/subscriptions/{subscriptionId}/tenant-id")]
