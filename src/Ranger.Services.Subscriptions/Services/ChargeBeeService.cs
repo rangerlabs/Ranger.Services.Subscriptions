@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ChargeBee.Models;
 using ChargeBee.Models.Enums;
@@ -10,12 +11,15 @@ namespace Ranger.Services.Subscriptions
 {
     public static class ChargeBeeService
     {
-        public static async Task<PlanLimits> GetSubscriptLimitDetailsAsync(string planId)
+        public static async Task<PlanLimits> GetSubscriptLimitDetailsAsync(string planId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
                 throw new ArgumentException($"{nameof(planId)} was null or whitespace");
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             var entityResult = await Plan.Retrieve(planId).RequestAsync();
             return entityResult.Plan.MetaData.ToObject<PlanLimits>(
                 new JsonSerializer
@@ -24,19 +28,23 @@ namespace Ranger.Services.Subscriptions
                 });
         }
 
-        public static async Task<Subscription> GetSubscriptionAsync(string tenantId)
+        public static async Task<Subscription> GetSubscriptionAsync(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             var entityResult = await Customer.Retrieve(tenantId).RequestAsync();
             var subscription = await Subscription.Retrieve(entityResult.Subscription.Id).RequestAsync();
             return entityResult.Subscription;
         }
 
-        public static async Task<IEnumerable<RangerPlan>> GetAllSubscriptionLimitDetailsAsync()
+        public static async Task<IEnumerable<RangerPlan>> GetAllSubscriptionLimitDetailsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var listResult = await Plan.List().Status().Is(Plan.StatusEnum.Active).RequestAsync();
             var plans = new List<RangerPlan>();
             foreach (var item in listResult.List)
@@ -46,7 +54,7 @@ namespace Ranger.Services.Subscriptions
             return plans;
         }
 
-        public static async Task<HostedPage> GetHostedPageUrl(string subscriptionId, string planId)
+        public static async Task<HostedPage> GetHostedPageUrl(string subscriptionId, string planId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(subscriptionId))
             {
@@ -57,6 +65,8 @@ namespace Ranger.Services.Subscriptions
                 throw new ArgumentException($"{nameof(planId)} was null or whitespace");
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var entityResult = await HostedPage.CheckoutExisting()
                                 .SubscriptionId(subscriptionId)
                                 .SubscriptionPlanId(planId)
@@ -65,12 +75,15 @@ namespace Ranger.Services.Subscriptions
             return entityResult?.HostedPage;
         }
 
-        public static async Task<PortalSession> GetPortalSessionAsync(string customerId)
+        public static async Task<PortalSession> GetPortalSessionAsync(string customerId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(customerId))
             {
                 throw new ArgumentException($"{nameof(customerId)} was null or whitespace");
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             var entityResult = await PortalSession.Create()
                                 .CustomerId(customerId).RequestAsync();
             return entityResult?.PortalSession;

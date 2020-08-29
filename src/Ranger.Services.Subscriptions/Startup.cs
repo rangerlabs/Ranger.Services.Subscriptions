@@ -41,6 +41,7 @@ namespace Ranger.Services.Subscriptions
             services.AddControllers(options =>
                 {
                     options.EnableEndpointRouting = false;
+                    options.Filters.Add<OperationCanceledExceptionFilter>();
                 })
                 .AddNewtonsoftJson(options =>
                 {
@@ -49,11 +50,12 @@ namespace Ranger.Services.Subscriptions
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            var identityAuthority = configuration["httpClient:identityAuthority"];
-            services.AddAutoWrapper();
-            services.AddSwaggerGen("Subscriptions API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
 
+            services.AddSwaggerGen("Subscriptions API", "v1");
+
+            var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
             services.AddTenantsHttpClient("http://tenants:8082", identityAuthority, "tenantsApi", "cKprgh9wYKWcsm");
             services.AddProjectsHttpClient("http://projects:8086", identityAuthority, "projectsApi", "usGwT8Qsp4La2");
@@ -99,20 +101,15 @@ namespace Ranger.Services.Subscriptions
             builder.AddRabbitMq();
         }
 
-        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
         {
-            this.loggerFactory = loggerFactory;
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
             ApiConfig.Configure(configuration.GetOptions<ChargeBeeOptions>("chargeBee").Site, configuration.GetOptions<ChargeBeeOptions>("chargeBee").ApiKey);
-
             app.UseSwagger("v1", "Subscriptions API");
             app.UseAutoWrapper();
-
+            app.UseUnhandedExceptionLogger();
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -131,11 +128,6 @@ namespace Ranger.Services.Subscriptions
                     new CancelTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateSubscription>()
                 .SubscribeCommand<ComputeTenantLimitDetails>();
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ namespace Ranger.Services.Subscriptions.Data
             return await context.SaveChangesAsync();
         }
 
-        public async Task<TenantSubscription> GetTenantSubscriptionByTenantId(string tenantId)
+        public async Task<TenantSubscription> GetTenantSubscriptionByTenantId(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrWhiteSpace(tenantId))
             {
@@ -53,11 +54,11 @@ namespace Ranger.Services.Subscriptions.Data
             var result = await context.TenantSubscriptions
                 .Where(_ => _.TenantId == tenantId)
                 .Include(_ => _.PlanLimits)
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(cancellationToken);
             return result;
         }
 
-        public async Task<TenantSubscription> GetTenantSubscriptionByCustomerId(string customerId)
+        public async Task<TenantSubscription> GetTenantSubscriptionByCustomerId(string customerId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrWhiteSpace(customerId))
             {
@@ -67,7 +68,7 @@ namespace Ranger.Services.Subscriptions.Data
             var result = await context.TenantSubscriptions
                 .Where(_ => _.CustomerId == customerId)
                 .Include(_ => _.PlanLimits)
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(cancellationToken);
             if (result is null)
             {
                 throw new RangerException("No tenant found for the provided customer id");
@@ -75,7 +76,7 @@ namespace Ranger.Services.Subscriptions.Data
             return result;
         }
 
-        public async Task<TenantSubscription> GetTenantSubscriptionBySubscriptionId(string subscriptionId)
+        public async Task<TenantSubscription> GetTenantSubscriptionBySubscriptionId(string subscriptionId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrWhiteSpace(subscriptionId))
             {
@@ -85,7 +86,7 @@ namespace Ranger.Services.Subscriptions.Data
             var result = await context.TenantSubscriptions
                 .Where(_ => _.SubscriptionId == subscriptionId)
                 .Include(_ => _.PlanLimits)
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(cancellationToken);
             if (result is null)
             {
                 throw new RangerException("No tenant found for the provided subscription id");
@@ -93,9 +94,9 @@ namespace Ranger.Services.Subscriptions.Data
             return result;
         }
 
-        public async Task<IEnumerable<TenantSubscription>> GetAllTenantSubscriptions()
+        public async Task<IEnumerable<TenantSubscription>> GetAllTenantSubscriptions(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await context.TenantSubscriptions.ToListAsync();
+            return await context.TenantSubscriptions.ToListAsync(cancellationToken);
         }
     }
 }
