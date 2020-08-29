@@ -119,7 +119,7 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
+            this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
                     new NewTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
