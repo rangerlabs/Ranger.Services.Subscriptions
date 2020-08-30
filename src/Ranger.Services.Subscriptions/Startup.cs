@@ -27,8 +27,6 @@ namespace Ranger.Services.Subscriptions
     {
         private readonly IWebHostEnvironment Environment;
         private readonly IConfiguration configuration;
-        private ILoggerFactory loggerFactory;
-        private IBusSubscriber busSubscriber;
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
@@ -119,7 +117,7 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ()
+            app.UseRabbitMQ()
                 .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
                     new NewTenantSubscriptionRejected(e.Message, ""))
                 .SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
