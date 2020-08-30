@@ -118,14 +118,14 @@ namespace Ranger.Services.Subscriptions
                 endpoints.MapRabbitMQHealthCheck();
             });
             app.UseRabbitMQ()
-                .SubscribeCommand<CreateNewTenantSubscription>((c, e) =>
+                .SubscribeCommandWithHandler<CreateNewTenantSubscription>((c, e) =>
                     new NewTenantSubscriptionRejected(e.Message, ""))
-                .SubscribeCommand<UpdateTenantSubscriptionOrganization>((c, e) =>
+                .SubscribeCommandWithHandler<UpdateTenantSubscriptionOrganization>((c, e) =>
                     new UpdateTenantSubscriptionOrganizationRejected(e.Message, ""))
-                .SubscribeCommand<CancelTenantSubscription>((c, e) =>
+                .SubscribeCommandWithHandler<CancelTenantSubscription>((c, e) =>
                     new CancelTenantSubscriptionRejected(e.Message, ""))
-                .SubscribeCommand<UpdateSubscription>()
-                .SubscribeCommand<ComputeTenantLimitDetails>();
+                .SubscribeCommandWithHandler<UpdateSubscription>()
+                .SubscribeCommandWithHandler<ComputeTenantLimitDetails>();
         }
     }
 }
