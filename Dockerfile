@@ -18,6 +18,7 @@ ARG MYGET_API_KEY
 COPY *.sln ./
 COPY ./src/Ranger.Services.Subscriptions/Ranger.Services.Subscriptions.csproj ./src/Ranger.Services.Subscriptions/Ranger.Services.Subscriptions.csproj
 COPY ./src/Ranger.Services.Subscriptions.Data/Ranger.Services.Subscriptions.Data.csproj ./src/Ranger.Services.Subscriptions.Data/Ranger.Services.Subscriptions.Data.csproj
+COPY ./test/Ranger.Services.Subscriptions.Tests/Ranger.Services.Subscriptions.Tests.csproj ./test/Ranger.Services.Subscriptions.Tests/Ranger.Services.Subscriptions.Tests.csproj
 COPY ./scripts ./scripts
 
 RUN ./scripts/create-nuget-config.sh ${MYGET_API_KEY}
