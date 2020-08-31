@@ -77,12 +77,21 @@ namespace Ranger.Services.Subscriptions
                     options.ApiName = "subscriptionsApi";
                     options.RequireHttpsMetadata = false;
                 });
-
-            services.AddDataProtection()
-                .SetApplicationName("Subscriptions")
-                .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<SubscriptionsDbContext>();
+            // Workaround for MAC validation issues on MacOS
+            if (configuration.IsIntegrationTesting())
+            {
+                services.AddDataProtection()
+                   .SetApplicationName("Subscriptions")
+                   .PersistKeysToDbContext<SubscriptionsDbContext>();
+            }
+            else
+            {
+                services.AddDataProtection()
+                    .SetApplicationName("Subscriptions")
+                    .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .PersistKeysToDbContext<SubscriptionsDbContext>();
+            }
 
             services.AddTransient<SubscriptionsRepository>();
 
