@@ -12,18 +12,18 @@ namespace Ranger.Services.Subscriptions
 {
     public class SubscriptionsService
     {
-        private readonly ProjectsHttpClient projectsHttpClient;
-        private readonly IdentityHttpClient identityHttpClient;
-        private readonly GeofencesHttpClient geofencesHttpClient;
-        private readonly IntegrationsHttpClient integrationsHttpClient;
+        private readonly IProjectsHttpClient projectsHttpClient;
+        private readonly IIdentityHttpClient identityHttpClient;
+        private readonly IGeofencesHttpClient geofencesHttpClient;
+        private readonly IIntegrationsHttpClient integrationsHttpClient;
         private readonly SubscriptionsRepository subscriptionsRepository;
         private readonly ILogger<SubscriptionsRepository> logger;
 
         public SubscriptionsService(
-            ProjectsHttpClient projectsHttpClient,
-            IdentityHttpClient identityHttpClient,
-            GeofencesHttpClient geofencesHttpClient,
-            IntegrationsHttpClient integrationsHttpClient,
+            IProjectsHttpClient projectsHttpClient,
+            IIdentityHttpClient identityHttpClient,
+            IGeofencesHttpClient geofencesHttpClient,
+            IIntegrationsHttpClient integrationsHttpClient,
             SubscriptionsRepository subscriptionsRepository,
             ILogger<SubscriptionsRepository> logger)
         {

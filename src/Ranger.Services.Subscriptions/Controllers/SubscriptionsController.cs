@@ -17,13 +17,13 @@ namespace Ranger.Services.Subscriptions
     [Authorize]
     public class SubscriptionsController : ControllerBase
     {
-        private readonly TenantsHttpClient tenantsClient;
+        private readonly ITenantsHttpClient tenantsClient;
         private readonly SubscriptionsRepository subscriptionsRepo;
         private readonly ILogger<SubscriptionsController> logger;
         private readonly ChargeBeeOptions options;
         private readonly SubscriptionsService subscriptionsService;
 
-        public SubscriptionsController(TenantsHttpClient tenantsClient, SubscriptionsRepository subscriptionsRepo, SubscriptionsService subscriptionsService, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
+        public SubscriptionsController(ITenantsHttpClient tenantsClient, SubscriptionsRepository subscriptionsRepo, SubscriptionsService subscriptionsService, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
         {
             this.subscriptionsService = subscriptionsService;
             this.tenantsClient = tenantsClient;
