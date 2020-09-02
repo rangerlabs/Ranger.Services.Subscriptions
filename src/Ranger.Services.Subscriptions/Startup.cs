@@ -64,9 +64,7 @@ namespace Ranger.Services.Subscriptions
             services.AddDbContext<SubscriptionsDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
-            },
-                ServiceLifetime.Transient
-            );
+            });
 
             services.AddTransient<ISubscriptionsDbContextInitializer, SubscriptionsDbContextInitializer>();
 
