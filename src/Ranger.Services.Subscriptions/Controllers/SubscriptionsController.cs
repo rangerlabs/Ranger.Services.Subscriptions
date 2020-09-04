@@ -179,7 +179,7 @@ namespace Ranger.Services.Subscriptions
                 }
                 await _redisDb.StringSetAsync(RedisKeys.SubscriptionEnabled(tenantId), tenantSubscription.Active);
                 logger.LogDebug("Added subscription status to cache");
-                return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active);
+                return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active.ToString());
             }
             catch (Exception ex)
             {
