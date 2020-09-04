@@ -177,9 +177,9 @@ namespace Ranger.Services.Subscriptions
                 {
                     throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
                 }
-                await _redisDb.StringSetAsync(RedisKeys.SubscriptionEnabled(tenantId), tenantSubscription.Active);
+                await _redisDb.StringSetAsync(RedisKeys.SubscriptionEnabled(tenantId), tenantSubscription.Active.ToString());
                 logger.LogDebug("Added subscription status to cache");
-                return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active.ToString());
+                return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active);
             }
             catch (Exception ex)
             {
