@@ -6,6 +6,7 @@ using Ranger.RabbitMQ;
 using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Subscriptions.Data;
 using Ranger.Services.Subscriptions.Messages.Events;
+using StackExchange.Redis;
 
 namespace Ranger.Services.Subscriptions.Handlers
 {
@@ -14,12 +15,14 @@ namespace Ranger.Services.Subscriptions.Handlers
         private readonly IBusPublisher busPublisher;
         private readonly SubscriptionsRepository repo;
         private readonly ILogger<UpdateSubscriptionHandler> logger;
+        private readonly IDatabase _redisDb;
 
-        public UpdateSubscriptionHandler(IBusPublisher busPublisher, SubscriptionsRepository repo, ILogger<UpdateSubscriptionHandler> logger)
+        public UpdateSubscriptionHandler(IBusPublisher busPublisher, SubscriptionsRepository repo, IConnectionMultiplexer connectionMultiplexer, ILogger<UpdateSubscriptionHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.repo = repo;
             this.logger = logger;
+            _redisDb = connectionMultiplexer.GetDatabase();
         }
 
         public async Task HandleAsync(UpdateSubscription message, ICorrelationContext context)
@@ -51,6 +54,8 @@ namespace Ranger.Services.Subscriptions.Handlers
             subscription.ScheduledCancellationDate = message.ScheduledCancellationDate;
             subscription.PlanLimits = planLimits;
             await repo.UpdateTenantSubscriptionByTenantId(subscription.TenantId, subscription);
+            await _redisDb.KeyDeleteAsync(RedisKeys.SubscriptionEnabled(subscription.TenantId));
+            logger.LogDebug("Removed subscription status from cache");
             busPublisher.Publish(new SubscriptionUpdated(subscription.TenantId), context);
         }
     }

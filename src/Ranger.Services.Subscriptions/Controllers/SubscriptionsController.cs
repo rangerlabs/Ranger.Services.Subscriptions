@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Services.Subscriptions.Data;
+using StackExchange.Redis;
 
 namespace Ranger.Services.Subscriptions
 {
@@ -22,10 +23,12 @@ namespace Ranger.Services.Subscriptions
         private readonly ILogger<SubscriptionsController> logger;
         private readonly ChargeBeeOptions options;
         private readonly SubscriptionsService subscriptionsService;
+        private readonly IDatabase _redisDb;
 
-        public SubscriptionsController(ITenantsHttpClient tenantsClient, SubscriptionsRepository subscriptionsRepo, SubscriptionsService subscriptionsService, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
+        public SubscriptionsController(ITenantsHttpClient tenantsClient, SubscriptionsRepository subscriptionsRepo, SubscriptionsService subscriptionsService, IConnectionMultiplexer connectionMultiplexer, ILogger<SubscriptionsController> logger, ChargeBeeOptions options)
         {
             this.subscriptionsService = subscriptionsService;
+            _redisDb = connectionMultiplexer.GetDatabase();
             this.tenantsClient = tenantsClient;
             this.subscriptionsRepo = subscriptionsRepo;
             this.options = options;
@@ -161,21 +164,28 @@ namespace Ranger.Services.Subscriptions
         [HttpGet("/subscriptions/{tenantId}/active")]
         public async Task<ApiResponse> IsSubscriptionActive(string tenantId, CancellationToken cancellationToken)
         {
-            TenantSubscription tenantSubscription = null;
             try
             {
-                tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
+                string redisResult = await _redisDb.StringGetAsync(RedisKeys.SubscriptionEnabled(tenantId));
+                if (!String.IsNullOrWhiteSpace(redisResult))
+                {
+                    logger.LogDebug("Retrieved subscription status from cache");
+                    return new ApiResponse("Successfully determined whether subscription is active", bool.Parse(redisResult));
+                }
+                var tenantSubscription = await this.subscriptionsRepo.GetTenantSubscriptionByTenantId(tenantId, cancellationToken);
                 if (tenantSubscription is null)
                 {
                     throw new ApiException("No subscription was found for the provided tenant id", StatusCodes.Status404NotFound);
                 }
+                await _redisDb.StringSetAsync(RedisKeys.SubscriptionEnabled(tenantId), tenantSubscription.Active);
+                logger.LogDebug("Added subscription status to cache");
+                return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Failed to retrieve subscription for tenant id '{tenantId}'");
                 throw new ApiException("Failed to determine whether subscription is active", StatusCodes.Status500InternalServerError);
             }
-            return new ApiResponse("Successfully determined whether subscription is active", tenantSubscription.Active);
         }
 
         ///<summary>

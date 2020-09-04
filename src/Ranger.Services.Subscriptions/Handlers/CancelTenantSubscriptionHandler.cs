@@ -8,6 +8,7 @@ using Ranger.Services.Operations.Messages.Subscriptions.Commands;
 using Ranger.Services.Operations.Messages.Subscriptions.Events;
 using Ranger.Services.Subscriptions.Data;
 using Ranger.Services.Subscriptions.Messages.Events;
+using StackExchange.Redis;
 
 namespace Ranger.Services.Subscriptions.Handlers
 {
@@ -15,12 +16,14 @@ namespace Ranger.Services.Subscriptions.Handlers
     {
         private readonly IBusPublisher busPublisher;
         private readonly SubscriptionsRepository subscriptionsRepository;
+        private readonly IDatabase redisDb;
         private readonly ILogger<UpdateTenantSubscriptionOrganizationHandler> logger;
 
-        public CancelTenantSubscriptionHandler(IBusPublisher busPublisher, SubscriptionsRepository subscriptionsRepository, ILogger<UpdateTenantSubscriptionOrganizationHandler> logger)
+        public CancelTenantSubscriptionHandler(IBusPublisher busPublisher, SubscriptionsRepository subscriptionsRepository, IConnectionMultiplexer connectionMultiplexer, ILogger<UpdateTenantSubscriptionOrganizationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.subscriptionsRepository = subscriptionsRepository;
+            redisDb = connectionMultiplexer.GetDatabase();
             this.logger = logger;
         }
 
@@ -30,6 +33,8 @@ namespace Ranger.Services.Subscriptions.Handlers
             {
                 var subscription = await subscriptionsRepository.GetTenantSubscriptionByTenantId(message.TenantId);
                 await ChargeBeeService.CancelChargeBeeSubscription(subscription.SubscriptionId);
+                await redisDb.KeyDeleteAsync(RedisKeys.SubscriptionEnabled(message.TenantId));
+                logger.LogDebug("Removed subscription status from cache");
             }
             catch (Exception ex)
             {
