@@ -17,6 +17,7 @@ using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
+using Ranger.Redis;
 using Ranger.Services.Operations.Messages.Subscriptions.Commands;
 using Ranger.Services.Operations.Messages.Subscriptions.RejectedEvents;
 using Ranger.Services.Subscriptions.Data;
@@ -65,6 +66,8 @@ namespace Ranger.Services.Subscriptions
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             });
+
+            services.AddRedis(configuration["redis:ConnectionString"]);
 
             services.AddTransient<ISubscriptionsDbContextInitializer, SubscriptionsDbContextInitializer>();
 
