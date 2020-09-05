@@ -67,7 +67,7 @@ namespace Ranger.Services.Subscriptions
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             });
 
-            services.AddRedis(configuration["redis:ConnectionString"]);
+            services.AddRedis(configuration["redis:ConnectionString"], out _);
 
             services.AddTransient<ISubscriptionsDbContextInitializer, SubscriptionsDbContextInitializer>();
 
@@ -106,7 +106,7 @@ namespace Ranger.Services.Subscriptions
         {
             builder.RegisterInstance<ChargeBeeOptions>(configuration.GetOptions<ChargeBeeOptions>("chargeBee"));
             builder.RegisterType<SubscriptionsService>();
-            builder.AddRabbitMq();
+            builder.AddRabbitMq<Startup>();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
