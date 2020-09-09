@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
+using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Subscriptions.Data
 {
-    public class SubscriptionsDbContext : DbContext, IDataProtectionKeyContext
+    public class SubscriptionsDbContext : DbContext, IDataProtectionKeyContext, IOutboxStore
     {
 
         private readonly IDataProtectionProvider dataProtectionProvider;
@@ -17,6 +18,7 @@ namespace Ranger.Services.Subscriptions.Data
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<TenantSubscription> TenantSubscriptions { get; set; }
         public DbSet<PlanLimits> PlanLimits { get; set; }
+        public DbSet<OutboxMessage> Outbox { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
