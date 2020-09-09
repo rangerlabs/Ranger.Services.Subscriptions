@@ -106,7 +106,7 @@ namespace Ranger.Services.Subscriptions
         {
             builder.RegisterInstance<ChargeBeeOptions>(configuration.GetOptions<ChargeBeeOptions>("chargeBee"));
             builder.RegisterType<SubscriptionsService>();
-            builder.AddRabbitMq<Startup, SubscriptionsDbContext>();
+            builder.AddRabbitMqWithOutbox<Startup, SubscriptionsDbContext>();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
