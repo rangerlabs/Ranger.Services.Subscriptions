@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ranger.Services.Subscriptions.Data;
@@ -9,9 +10,10 @@ using Ranger.Services.Subscriptions.Data;
 namespace Ranger.Services.Subscriptions.Data.Migrations
 {
     [DbContext(typeof(SubscriptionsDbContext))]
-    partial class SubscriptionsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200912174035_OutboxOneToOneRelationship")]
+    partial class OutboxOneToOneRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
